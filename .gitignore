@@ -1,0 +1,6 @@
+# Ignoring all data storage files
+*.pkl
+*.ckpt
+/tasks
+/experiments
+/archive
