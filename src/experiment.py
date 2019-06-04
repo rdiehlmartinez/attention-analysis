@@ -89,12 +89,29 @@ class ClassificationExperiment(Experiment):
         super().__init__(params, model)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
+        self._train_for_epoch = train_for_epoch_func
+        self._inference_func = inference_func
 
         if train_for_epoch_func is None:
             self._train_for_epoch = self.__default_train_for_epoch
 
         if inference_func is None:
             self._inference_func = self.__default_inference_func
+
+    def reinitialize_weights(self):
+        '''Initializing model weights randomly '''
+        self.model.apply(ClassificationExperiment.weights_init_uniform_rule)
+
+    @staticmethod
+    def weights_init_uniform_rule(m):
+        classname = m.__class__.__name__
+        # for every Linear layer in a model..
+        if classname.find('Linear') != -1:
+            # get the number of the inputs
+            n = m.in_features
+            y = 1.0/np.sqrt(n)
+            m.weight.data.uniform_(-y, y)
+            m.bias.data.fill_(0)
 
     def set_train_for_epoch_func(self, func):
         '''
@@ -139,6 +156,10 @@ class ClassificationExperiment(Experiment):
             if self.params['output_dim'] == 1:
                 # in binary case
                 labels = torch.reshape(input=labels, shape=predict_probs.shape)
+            else:
+                # multi class
+                #TODO
+                raise NotImplementedError()
 
             loss = self.loss_fn(predict_probs, labels.to(dtype=torch.float))
 
@@ -209,20 +230,20 @@ class ClassificationExperiment(Experiment):
         all_losses = []
         all_evaluations = []
 
-        for epoch in tqdm(range(num_epochs)):
+        for epoch in tqdm(range(num_epochs), desc="epoch training", leave=False):
             keys = {"input_key":input_key,
                     "label_key":label_key,
                     "threshold":threshold}
-            losses = self._train_for_epoch(train_dataloader, **keys)
-            predictions, evaluations = self.run_inference(eval_dataloader, **keys)
+            losses = self._train_for_epoch(self=self, dataloader=train_dataloader, **keys)
+            predictions, evaluations = self.run_inference(dataloader=eval_dataloader, **keys)
             all_losses.append(losses)
             all_evaluations.append(evaluations)
 
         return all_losses, all_evaluations
 
-    def run_inference(self, dataloader, input_key, label_key, **kwargs):
+    def run_inference(self, dataloader, **kwargs):
         '''Runs inference on self.model and returns model predictions'''
-        return self._inference_func(dataloader, input_key, label_key, **kwargs)
+        return self._inference_func(self=self, dataloader=dataloader, **kwargs)
 
 class AttentionExperiment(Experiment):
     '''
