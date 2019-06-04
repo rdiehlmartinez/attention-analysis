@@ -58,8 +58,8 @@
   "final_task":{
     "model":"shallow_nn",
     "window_size":5,
-    "input_dim":11,
-    "hidden_dim":3,
+    "input_dim": 44,
+    "hidden_dim":10,
     "output_dim":1,
     "data_split":{
       "train_split":0.7,

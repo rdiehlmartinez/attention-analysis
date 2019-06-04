@@ -59,7 +59,7 @@
     "model":"shallow_nn",
     "window_size":5,
     "input_dim":11,
-    "hidden_dim":3,
+    "hidden_dim":5,
     "output_dim":1,
     "data_split":{
       "train_split":0.7,
@@ -69,9 +69,9 @@
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
-      "num_epochs":2000,
+      "num_epochs":1000,
       "batch_size":32,
-      "lr":5e-2
+      "lr":3e-4
     }
   }
 }
