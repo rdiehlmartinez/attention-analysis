@@ -22,13 +22,21 @@ from torch.optim import Adam, SGD
 from sklearn.linear_model import SGDClassifier
 
 ######### Model Specific Imports #########
-from tasks.bias_classification.lib.shared.data import get_examples
+from tasks.bias_classification.lib.shared.data import get_examples, get_sentences_from_dataset
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 import tasks.bias_classification.lib.tagging.model as tagging_model
 import tasks.bias_classification.lib.seq2seq.model as seq2seq_model
 import tasks.bias_classification.lib.joint.model as complete_model
 
 CUDA = (torch.cuda.device_count() > 0)
+
+############# Experiment specific utils #############
+
+def get_sample_toks(data_path):
+    ''' Returns a list of tokens/sentences from the dataset'''
+    return get_sentences_from_dataset(data_path)
+
+############# Basic Required Initializations  #############
 
 def intialize_params(experiment_path):
     '''
