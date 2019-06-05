@@ -102,7 +102,7 @@ def logreg_binary_inference_func(self, dataloader, input_key, label_key, thresho
                 batch_predictions.append(0)
 
         accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
-        auc_score = roc_auc_score(labels, predict_probs[:,1])
+        auc_score = roc_auc_score(labels, predict_probs[:, 1])
 
         curr_eval = {"num_examples":len(labels),
                      "accuracy":accuracy,
@@ -136,7 +136,8 @@ def run_boostrapping(classification_experiment,
                      label_key='label',
                      threshold=0.42,
                      statistics=["auc", "accuracy"],
-                     num_bootstrap_iters=100):
+                     num_bootstrap_iters=100,
+                     **kwargs):
     '''
     Randomly shuffles dataset and reports confidence interval statistics
     via using bootstrapping methods.
@@ -157,7 +158,8 @@ def run_boostrapping(classification_experiment,
                                                                     eval_dataloader,
                                                                     input_key=input_key,
                                                                     label_key=label_key,
-                                                                    threshold=threshold)
+                                                                    threshold=threshold,
+                                                                    **kwargs)
         avg_evaluations = [average_data(epoch_evaluations) for epoch_evaluations in evaluations]
         for statistic in statistics:
             _, max_statistic, _ = get_statistics(avg_evaluations, statistic)
