@@ -152,16 +152,21 @@ class ClassificationExperiment(Experiment):
             inputs = batch[input_key]
             labels = batch[label_key]
 
-            predict_probs = self.model(inputs)
+            if 'attention_mask_key' in kwargs:
+                masks = batch[kwargs.get("attention_mask_key")]
+                predict_logits = self.model(inputs, attention_mask=masks)
+            else:
+                predict_logits = self.model(inputs)
+
             if self.params['output_dim'] == 1:
                 # in binary case
-                labels = torch.reshape(input=labels, shape=predict_probs.shape)
+                labels = torch.reshape(input=labels, shape=predict_logits.shape)
             else:
                 # multi class
                 #TODO
                 raise NotImplementedError()
 
-            loss = self.loss_fn(predict_probs, labels.to(dtype=torch.float))
+            loss = self.loss_fn(predict_logits, labels.to(dtype=torch.float))
 
             loss.backward()
             self.optimizer.step()
@@ -194,6 +199,12 @@ class ClassificationExperiment(Experiment):
             with torch.no_grad():
                 if self.params['output_dim'] == 1:
                     # binary task
+                    if 'attention_mask_key' in kwargs:
+                        masks = batch[kwargs.get("attention_mask_key")]
+                        predict_logits = self.model(inputs, attention_mask=masks)
+                    else:
+                        predict_logits = self.model(inputs)
+
                     predict_logits = self.model(inputs).squeeze(1)
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
 
@@ -206,7 +217,11 @@ class ClassificationExperiment(Experiment):
                             batch_predictions.append(0)
 
                     accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
-                    auc_score = roc_auc_score(labels, predict_probs)
+                    try:
+                        auc_score = roc_auc_score(labels, predict_probs)
+                    except:
+                        print(labels)
+                        raise Exception("All same class labels - cannot calculate auc")
 
                     curr_eval = {"num_examples":len(labels),
                                  "accuracy":accuracy,
@@ -223,7 +238,7 @@ class ClassificationExperiment(Experiment):
     def train_model(self, train_dataloader, eval_dataloader,
                     input_key="input",
                     label_key="label",
-                    threshold=0.42):
+                    threshold=0.42, **kwargs):
 
         '''Trains self.model using parameters from self.params'''
         num_epochs = self.params['training_params']['num_epochs']
@@ -234,8 +249,10 @@ class ClassificationExperiment(Experiment):
             keys = {"input_key":input_key,
                     "label_key":label_key,
                     "threshold":threshold}
-            losses = self._train_for_epoch(self=self, dataloader=train_dataloader, **keys)
-            predictions, evaluations = self.run_inference(dataloader=eval_dataloader, **keys)
+            kwargs = {**kwargs, **keys}
+
+            losses = self._train_for_epoch(dataloader=train_dataloader, **kwargs)
+            predictions, evaluations = self.run_inference(dataloader=eval_dataloader, **kwargs)
             all_losses.append(losses)
             all_evaluations.append(evaluations)
 
@@ -243,7 +260,7 @@ class ClassificationExperiment(Experiment):
 
     def run_inference(self, dataloader, **kwargs):
         '''Runs inference on self.model and returns model predictions'''
-        return self._inference_func(self=self, dataloader=dataloader, **kwargs)
+        return self._inference_func(dataloader=dataloader, **kwargs)
 
 class AttentionExperiment(Experiment):
     '''
