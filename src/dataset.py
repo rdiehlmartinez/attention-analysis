@@ -102,8 +102,6 @@ class ExperimentDataset(Dataset):
         three dataloaders with these corresponding split_train_eval_test.
         '''
 
-        assert(train_split + eval_split + test_split == 1), "Incorrect data split proportions"
-
         if data is None:
             data = self.data
 
