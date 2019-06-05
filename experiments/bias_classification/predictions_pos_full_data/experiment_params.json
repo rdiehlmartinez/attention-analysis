@@ -17,12 +17,12 @@
       "attention_extraction_batch_size":1
     },
     "task_specific_params":{
-      "num_categories": 43,
-      "num_tok_labels": 3,
-      "working_dir" : "../../../tasks/bias_classification/results",
-      "bert_model": "bert-base-uncased",
-      "target_data":"../../../tasks/bias_classification/data/500_test.tsv",
-      "target_labels":"../../../tasks/bias_classification/data/bias_labels.tsv",
+      "num_categories":43,
+      "num_tok_labels":3,
+      "working_dir":"../../../tasks/bias_classification/results",
+      "bert_model":"bert-base-uncased",
+      "target_data":"../../../tasks/bias_classification/data/final/biased.word.train",
+      "target_labels":null,
       "lexicon_dir":"../../../tasks/bias_classification/data/lexicons",
       "test_batch_size":1,
       "transformer_layers":1,
