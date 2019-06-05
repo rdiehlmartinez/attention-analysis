@@ -2,9 +2,11 @@
 *.pkl
 *.ckpt
 /archive
+
 env
 
 .vscode/
 
+/tasks
 /data
 /final_model
