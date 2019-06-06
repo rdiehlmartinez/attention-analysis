@@ -98,18 +98,6 @@ class Featurizer:
 
 
     def features(self, id_seq, rel_ids, pos_ids):
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
-=======
-
->>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
-=======
-
->>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
         if self.pad_id in id_seq:
             pad_idx = id_seq.index(self.pad_id)
             pad_len = len(id_seq[pad_idx:])
