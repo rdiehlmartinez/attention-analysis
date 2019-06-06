@@ -17,9 +17,11 @@ import numpy as np
 
 ######### Target Model Imports  #########
 from models.shallow_nn import ShallowClassifier
+from models.full_attentional_nn import FullAttentionalClassifier
 from src.utils import logreg_train_for_epoch, logreg_binary_inference_func
 from torch.optim import Adam, SGD
 from sklearn.linear_model import SGDClassifier
+from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 
 ######### Model Specific Imports #########
 from tasks.bias_classification.lib.shared.data import get_examples, get_sentences_from_dataset
@@ -59,6 +61,16 @@ def initialize_classification_experiment(final_task_params):
         hidden_dim = final_task_params['hidden_dim']
         output_dim = final_task_params['output_dim']
         model = ShallowClassifier(input_dim, hidden_dim, output_dim)
+    elif model_type == 'full_attentional':
+        num_attention_dists = final_task_params['num_attention_dists']
+        input_dim = final_task_params['input_dim']
+        hidden_dim = final_task_params['hidden_dim']
+        output_dim = final_task_params['output_dim']
+        model = FullAttentionalClassifier(num_attention_dists, input_dim, hidden_dim, output_dim)
+    elif model_type == 'bert_basic_uncased_sequence':
+        model = BertForSequenceClassification.from_pretrained(
+            'bert-base-uncased',
+            num_labels=final_task_params['output_dim'])
     elif model_type == 'log_reg':
         model = SGDClassifier(loss='log')
         train_for_epoch = logreg_train_for_epoch
@@ -112,6 +124,14 @@ def initialize_dataset(intermediary_task_params):
                         tok2id,
                         general_model_params['max_seq_len'])
     return ExperimentDataset(data)
+
+def get_tok2id(intermediary_task_params):
+    task_specific_params = intermediary_task_params['task_specific_params']
+    tokenizer = BertTokenizer.from_pretrained(
+        task_specific_params['bert_model'],
+        cache_dir=task_specific_params['working_dir'] + '/cache')
+    tok2id = tokenizer.vocab
+    return tok2id
 
 def initialize_attention_experiment(intermediary_task_params, verbose=False):
     '''
