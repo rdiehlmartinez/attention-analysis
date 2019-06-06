@@ -5,6 +5,7 @@
 /data
 /final_model
 
+experiments/bias_classification/predictions_pos_full_data/pos_labels
 *.pyc
 
 *.vscode
