@@ -58,7 +58,7 @@
   "final_task":{
     "model":"shallow_nn",
     "window_size":5,
-    "input_dim": 100,
+    "input_dim": 90,
     "hidden_dim":10,
     "output_dim":1,
     "data_split":{
