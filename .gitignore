@@ -4,3 +4,5 @@
 /archive
 /data
 /final_model
+/cache
+*.pyc
