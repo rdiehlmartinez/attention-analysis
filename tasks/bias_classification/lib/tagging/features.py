@@ -98,6 +98,7 @@ class Featurizer:
 
 
     def features(self, id_seq, rel_ids, pos_ids):
+        
         if self.pad_id in id_seq:
             pad_idx = id_seq.index(self.pad_id)
             pad_len = len(id_seq[pad_idx:])
@@ -119,6 +120,10 @@ class Featurizer:
                 words.append(tok)
                 word_indices.append([i])
 
+<<<<<<< HEAD
+=======
+        # get expert featur
+>>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
         lex_feats = self.lexicon_features(words, bits=self.lexicon_feature_bits)
         context_feats = self.context_features(lex_feats)
         expert_feats = np.concatenate((lex_feats, context_feats), axis=1)
