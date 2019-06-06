@@ -89,8 +89,8 @@ class ClassificationExperiment(Experiment):
         super().__init__(params, model)
         self.loss_fn = loss_fn
         self.optimizer = optimizer
-        self._train_for_epoch = train_for_epoch_func
-        self._inference_func = inference_func
+        ClassificationExperiment._train_for_epoch = train_for_epoch_func
+        ClassificationExperiment._inference_func = inference_func
 
         if train_for_epoch_func is None:
             self._train_for_epoch = self.__default_train_for_epoch

@@ -105,7 +105,7 @@ def initialize_classification_experiment(final_task_params):
 
     return ClassificationExperiment(final_task_params, model, optimizer=optim, loss_fn=loss_func)
 
-def initialize_dataset(intermediary_task_params):
+def initialize_dataset(intermediary_task_params, data_path='', labels_path=''):
     '''
     Initializes a dataset object which stores useful data for both attention
     extraction and classification.
@@ -113,14 +113,20 @@ def initialize_dataset(intermediary_task_params):
     task_specific_params = intermediary_task_params['task_specific_params']
     general_model_params = intermediary_task_params['general_model_params']
 
+    if data_path == '':
+        data_path = task_specific_params['target_data']
+
+    if labels_path == '':
+        labels_path = task_specific_params['target_labels']
+
     tokenizer = BertTokenizer.from_pretrained(
         task_specific_params['bert_model'],
         cache_dir=task_specific_params['working_dir'] + '/cache')
     tok2id = tokenizer.vocab
 
     data = get_examples(intermediary_task_params,
-                        task_specific_params['target_data'],
-                        task_specific_params['target_labels'],
+                        data_path,
+                        labels_path,
                         tok2id,
                         general_model_params['max_seq_len'])
     return ExperimentDataset(data)
