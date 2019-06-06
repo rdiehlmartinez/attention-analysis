@@ -4,10 +4,14 @@
 /archive
 /data
 /final_model
-
+/cache
 experiments/bias_classification/predictions_pos_full_data/pos_labels
 *.pyc
 
 *.vscode
 /env
+<<<<<<< HEAD
 /tasks
+=======
+/tasks
+>>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
