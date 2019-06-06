@@ -235,7 +235,11 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
             else:
                 pre_toks = tokens
 
+<<<<<<< HEAD
             pre_ids = pad([tok2id['[CLS]']] + [tok2id[x] for x in pre_toks], 0)
+=======
+            pre_ids = pad([tok2id[x] for x in pre_toks], 0)
+>>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
             post_in_ids = pad([tok2id[x] for x in post_input_tokens], 0)
             post_out_ids = pad([tok2id[x] for x in post_output_tokens], 0)
             pre_tok_label_ids = pad(pre_tok_labels, EDIT_TYPE2ID['mask'])
@@ -266,9 +270,13 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
         out['pos_ids'].append(pos_ids)
         out['categories'].append(categories)
         out['index'].append(i)
+<<<<<<< HEAD
 
         if target_labels_path is not None:
             out['bias_label'].append(bias_label)
+=======
+        out['bias_label'].append(bias_label)
+>>>>>>> 990e5d4bf2492e96be34986266bce37fd044e63c
 
     if convert_to_tensors:
         out['pre_ids'] = torch.tensor(out['pre_ids'], dtype=torch.long)

@@ -21,7 +21,7 @@ Experiment(obj):
 
 import torch
 import torch.nn as nn
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 import math
 import pickle
 from src.params import Params
@@ -156,6 +156,7 @@ class ClassificationExperiment(Experiment):
                 masks = batch[kwargs.get("attention_mask_key")]
                 predict_logits = self.model(inputs, attention_mask=masks)
             else:
+                inputs
                 predict_logits = self.model(inputs)
 
             if self.params['output_dim'] == 1:
@@ -220,8 +221,8 @@ class ClassificationExperiment(Experiment):
                     try:
                         auc_score = roc_auc_score(labels, predict_probs)
                     except:
-                        print(labels)
-                        raise Exception("All same class labels - cannot calculate auc")
+                        print("All labels are of the same type – skipping AUC calculation")
+                        continue
 
                     curr_eval = {"num_examples":len(labels),
                                  "accuracy":accuracy,

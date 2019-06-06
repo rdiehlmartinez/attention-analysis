@@ -21,3 +21,4 @@ class ShallowClassifier(nn.Module):
         hidden = F.relu(self.f1(X))
         output = self.f2(hidden)
         return output
+    

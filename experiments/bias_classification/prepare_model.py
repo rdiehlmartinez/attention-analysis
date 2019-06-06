@@ -131,6 +131,14 @@ def initialize_dataset(intermediary_task_params, data_path='', labels_path=''):
                         general_model_params['max_seq_len'])
     return ExperimentDataset(data)
 
+def get_tok2id(intermediary_task_params):
+    task_specific_params = intermediary_task_params['task_specific_params']
+    tokenizer = BertTokenizer.from_pretrained(
+        task_specific_params['bert_model'],
+        cache_dir=task_specific_params['working_dir'] + '/cache')
+    tok2id = tokenizer.vocab
+    return tok2id
+
 def initialize_attention_experiment(intermediary_task_params, verbose=False):
     '''
     Takes in a params object and intializes an Experiment object. To intialize

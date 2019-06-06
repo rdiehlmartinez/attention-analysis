@@ -4,4 +4,9 @@
 /archive
 /data
 /final_model
-/cache
+
+*.pyc
+
+*.vscode
+/env
+/tasks
