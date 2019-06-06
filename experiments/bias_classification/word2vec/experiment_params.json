@@ -21,8 +21,8 @@
       "num_tok_labels": 3,
       "working_dir" : "../../../tasks/bias_classification/results",
       "bert_model": "bert-base-uncased",
-      "target_data":"../../../tasks/bias_classification/data/500_test.tsv",
-      "target_labels":"../../../tasks/bias_classification/data/bias_labels.tsv",
+      "target_data":"../../../tasks/bias_classification/data/train_dev.tsv",
+      "target_labels":"../../../tasks/bias_classification/data/bias_labels_train_dev.tsv",
       "lexicon_dir":"../../../tasks/bias_classification/data/lexicons",
       "test_batch_size":1,
       "transformer_layers":1,
@@ -58,7 +58,7 @@
   "final_task":{
     "model":"shallow_nn",
     "window_size":5,
-    "input_dim": 44,
+    "input_dim": 100,
     "hidden_dim":10,
     "output_dim":1,
     "data_split":{
