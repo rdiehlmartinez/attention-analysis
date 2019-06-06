@@ -21,8 +21,9 @@
       "num_tok_labels":3,
       "working_dir":"../../../tasks/bias_classification/results",
       "bert_model":"bert-base-uncased",
-      "target_data":"../../../tasks/bias_classification/data/final/biased.word.train",
-      "target_labels":null,
+      "target_data":"../../../tasks/bias_classification/data/train_dev.tsv",
+      "target_labels":"../../../tasks/bias_classification/data/bias_labels_train_dev.tsv",
+      "full_data":"../../../tasks/bias_classification/data/final/biased.word.train",
       "lexicon_dir":"../../../tasks/bias_classification/data/lexicons",
       "test_batch_size":1,
       "transformer_layers":1,
@@ -56,19 +57,16 @@
     }
   },
   "final_task":{
-    "model":"bert_basic_uncased_sequence",
-    "output_dim":1,
+    "model":"log_reg",
     "data_split":{
       "train_split":0.7,
       "eval_split": 0.3,
       "test_split": 0
     },
     "training_params":{
-      "optimizer":"adam",
-      "loss":"bce_with_logits",
-      "num_epochs":100,
-      "batch_size":16,
-      "lr":1e-3
+      "num_epochs":200,
+      "batch_size":32,
+      "lr":1e-2
     }
   }
 }

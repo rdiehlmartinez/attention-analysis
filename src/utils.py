@@ -44,7 +44,11 @@ def get_statistics(data_list, key):
 ################### Data Processing Utils ###################
 
 # For bias classification task
-def sentence_to_POS_matrix(input_toks, bias_label, indices):
+def sentence_to_POS_matrix(input_toks,
+                           bias_label,
+                           indices,
+                           return_pos_list=False,
+                           valid_pos_label=None):
     '''
     Given sentences transforms these into POS tags and then into a dict vectorizer.
     The input tokens are passed in as a dictionary where the key represents a
@@ -54,16 +58,37 @@ def sentence_to_POS_matrix(input_toks, bias_label, indices):
     # Typically we want these features to be added in at the start
     # of the dataset
     labels = []
-    for i, idx in enumerate(indices): # a list of indices in the dataset
+    pos_tags = []
+    skip_indices = []
+    for i, idx in tqdm(enumerate(indices)): # a list of indices in the dataset
 
         idx = idx.item()
+
+        if idx not in input_toks.keys():
+            print(idx)
+
         assert(idx in input_toks.keys()), \
             "there is an index key in the dataset for which no matching sentence exists"
 
         sentence_toks = input_toks[idx]
         bias_index = bias_label[i] # the index of the biased word in the sentence
-        labels.append({nltk.pos_tag(sentence_toks)[bias_index][1] : 1})
-    return DictVectorizer().fit_transform(labels).toarray()
+        pos_label = nltk.pos_tag(sentence_toks)[bias_index][1]
+
+        if valid_pos_label is not None and pos_label not in valid_pos_label:
+            skip_indices.append(i)
+            continue
+
+        pos_tags.append(pos_label)
+        labels.append({pos_label : 1})
+
+    if valid_pos_label is not None:
+        return (DictVectorizer().fit_transform(labels).toarray(), skip_indices)
+
+    # In case the user needs easy access to the set of pos tag labels
+    if return_pos_list:
+        return DictVectorizer().fit_transform(labels).toarray(), set(pos_tags)
+    else:
+        return DictVectorizer().fit_transform(labels).toarray()
 
 ################### Prepare Model Utils ###################
 
@@ -86,9 +111,14 @@ def logreg_binary_inference_func(self, dataloader, input_key, label_key, thresho
     ''' For logistic regression binary-class inference'''
     predictions = []
     evaluations = []
+
+    return_evaluations = label_key != ''
+
     for step, batch in enumerate(dataloader):
         inputs = batch[input_key]
-        labels = batch[label_key]
+
+        if return_evaluations:
+            labels = batch[label_key]
 
         predict_probs = self.model.predict_proba(inputs)
 
@@ -101,13 +131,15 @@ def logreg_binary_inference_func(self, dataloader, input_key, label_key, thresho
                 predictions.append(0)
                 batch_predictions.append(0)
 
-        accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
-        auc_score = roc_auc_score(labels, predict_probs[:, 1])
+        if return_evaluations:
+            accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
+            auc_score = roc_auc_score(labels, predict_probs[:, 1])
 
-        curr_eval = {"num_examples":len(labels),
-                     "accuracy":accuracy,
-                     "auc":auc_score}
-        evaluations.append(curr_eval)
+            curr_eval = {"num_examples":len(labels),
+                         "accuracy":accuracy,
+                         "auc":auc_score}
+            evaluations.append(curr_eval)
+
     predictions = np.stack(predictions, axis=0)
     return predictions, evaluations
 
