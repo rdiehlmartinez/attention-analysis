@@ -21,7 +21,7 @@ Experiment(obj):
 
 import torch
 import torch.nn as nn
-from tqdm import tqdm
+from tqdm import tqdm_notebook as tqdm
 import math
 import pickle
 from src.params import Params
@@ -144,19 +144,22 @@ class ClassificationExperiment(Experiment):
 
         self.model.train()
         losses = []
-        for step, batch in enumerate(dataloader):
+        for step, batch in tqdm(enumerate(dataloader), desc='train_step'):
             if CUDA:
                 self.model.cuda()
                 batch = {key: val.cuda() for key, val in batch.items()}
 
             inputs = batch[input_key]
             labels = batch[label_key]
+            #print(inputs)
 
             if 'attention_mask_key' in kwargs:
                 masks = batch[kwargs.get("attention_mask_key")]
+                #print(masks)
+                #print(inputs)
                 predict_logits = self.model(inputs, attention_mask=masks)
+                print(predict_logits)
             else:
-                inputs
                 predict_logits = self.model(inputs)
 
             if self.params['output_dim'] == 1:
@@ -170,6 +173,8 @@ class ClassificationExperiment(Experiment):
             loss = self.loss_fn(predict_logits, labels.to(dtype=torch.float))
 
             loss.backward()
+            print(loss.item())
+            #exit()
             self.optimizer.step()
             self.model.zero_grad()
 
@@ -188,13 +193,18 @@ class ClassificationExperiment(Experiment):
         self.model.eval()
         predictions = []
         evaluations = []
-        for step, batch in enumerate(dataloader):
+
+        return_evaluations = label_key != ''
+
+        for step, batch in tqdm(enumerate(dataloader), desc='inference_step'):
             if CUDA:
                 self.model.cuda()
                 batch = {key: val.cuda() for key, val in batch.items()}
 
             inputs = batch[input_key]
-            labels = batch[label_key]
+
+            if return_evaluations:
+                labels = batch[label_key]
 
             batch_predictions = []
             with torch.no_grad():
@@ -217,17 +227,18 @@ class ClassificationExperiment(Experiment):
                             predictions.append(0)
                             batch_predictions.append(0)
 
-                    accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
-                    try:
-                        auc_score = roc_auc_score(labels, predict_probs)
-                    except:
-                        print("All labels are of the same type – skipping AUC calculation")
-                        continue
+                    if return_evaluations:
+                        accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
+                        try:
+                            auc_score = roc_auc_score(labels, predict_probs)
+                        except:
+                            print("All labels are of the same type – skipping AUC calculation")
+                            continue
 
-                    curr_eval = {"num_examples":len(labels),
-                                 "accuracy":accuracy,
-                                 "auc":auc_score}
-                    evaluations.append(curr_eval)
+                        curr_eval = {"num_examples":len(labels),
+                                     "accuracy":accuracy,
+                                     "auc":auc_score}
+                        evaluations.append(curr_eval)
 
                 else:
                     # multi class

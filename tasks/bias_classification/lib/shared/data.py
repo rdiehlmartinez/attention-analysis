@@ -266,7 +266,8 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
         out['pos_ids'].append(pos_ids)
         out['categories'].append(categories)
         out['index'].append(i)
-        out['bias_label'].append(bias_label)
+        if target_labels_path is not None:
+            out['bias_label'].append(bias_label)
 
     if convert_to_tensors:
         out['pre_ids'] = torch.tensor(out['pre_ids'], dtype=torch.long)
@@ -279,8 +280,10 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
         out['rel_ids'] = torch.tensor(out['rel_ids'], dtype=torch.long)
         out['pos_ids'] = torch.tensor(out['pos_ids'], dtype=torch.long)
         out['categories'] = torch.tensor(out['categories'], dtype=torch.float)
-        out['bias_label'] = torch.tensor(out['bias_label'], dtype=torch.int16)
-        out['index'] = torch.tensor(out['index'], dtype=torch.int16)
+        out['index'] = torch.tensor(out['index'], dtype=torch.int32)
+        if target_labels_path is not None:
+            out['bias_label'] = torch.tensor(out['bias_label'], dtype=torch.int16)
+
 
     return out
 
