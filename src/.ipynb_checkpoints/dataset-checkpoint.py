@@ -104,12 +104,17 @@ class ExperimentDataset(Dataset):
 
         if data is None:
             data = self.data
+            
+        
 
         train_data = {key: val[:int(len(self) * train_split)] for key, val in data.items()}
         eval_data = {key: val[int(len(self) * train_split):int(len(self) * (train_split+eval_split))] \
                                                     for key, val in data.items()}
         test_data = {key: val[int(len(self) * (train_split+eval_split)):] \
                                                     for key, val in data.items()}
+        assert(len(set(map(int, train_data["index"])) & set(map(int, eval_data["index"]))) == 0)
+        assert(len(set(map(int, train_data["index"])) & set(map(int, test_data["index"]))) == 0)
+        print(set(map(int, train_data["index"])))
         train_dataloader = self.return_dataloader(data=train_data, batch_size=batch_size)
         eval_dataloader = self.return_dataloader(data=eval_data, batch_size=batch_size)
         test_dataloader = self.return_dataloader(data=test_data, batch_size=batch_size)
