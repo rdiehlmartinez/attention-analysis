@@ -1,12 +1,15 @@
 # Ignoring all data storage files
 *.pkl
 *.ckpt
-/archive
-/data
-/final_model
+archive/
+data/
+final_model/
+cache/
+.ftpconfig
 
+#checkpoints and intermediary files
+__pycache__/
+.ipynb_checkpoints/
 *.pyc
 
-*.vscode
-/env
-/tasks
+env/
