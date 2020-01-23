@@ -1,4 +1,4 @@
-# attention_analysis
+# Low Resource Prediction Using Bert Attention Scores
 
 This library is the code-base that accompanies our in-progress workshop paper.
 We demonstrate that the attention distributions of trained BERT models
