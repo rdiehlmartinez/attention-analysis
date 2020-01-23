@@ -7,7 +7,10 @@ final_model/
 cache/
 .ftpconfig
 
-#checkpoints and intermediary files
+# Removing the .DS_Store
+.DS_Store
+
+# Checkpoints and intermediary files
 __pycache__/
 .ipynb_checkpoints/
 *.pyc
