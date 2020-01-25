@@ -10,9 +10,11 @@ greater amount of data.
 '''
 
 import torch
-from torch.utils.data import TensorDataset, DataLoader, SequentialSampler, Dataset
-from .utils import str_to_dtype
 import numpy as np
+from torch.utils.data import TensorDataset, DataLoader, SequentialSampler, Dataset
+from lib.shared.data import get_examples
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+from utils.data_utils import get_tok2id, str_to_dtype
 
 class ExperimentDataset(Dataset):
     ''' Datasets used for experiments.'''
@@ -104,8 +106,8 @@ class ExperimentDataset(Dataset):
 
         if data is None:
             data = self.data
-            
-        
+
+
 
         train_data = {key: val[:int(len(self) * train_split)] for key, val in data.items()}
         eval_data = {key: val[int(len(self) * train_split):int(len(self) * (train_split+eval_split))] \
@@ -120,3 +122,27 @@ class ExperimentDataset(Dataset):
         test_dataloader = self.return_dataloader(data=test_data, batch_size=batch_size)
 
         return (train_dataloader, eval_dataloader, test_dataloader)
+
+    @classmethod
+    def init_dataset(cls, intermediary_task_params, data_path='', labels_path=''):
+        '''
+        Initializes a dataset object which stores useful data for both attention
+        extraction and classification.
+        '''
+        task_specific_params = intermediary_task_params['task_specific_params']
+        general_model_params = intermediary_task_params['general_model_params']
+
+        if data_path == '':
+            data_path = task_specific_params['target_data']
+
+        if labels_path == '':
+            labels_path = task_specific_params['target_labels']
+
+        tok2id = get_tok2id(intermediary_task_params)
+
+        data = get_examples(intermediary_task_params,
+                            data_path,
+                            labels_path,
+                            tok2id,
+                            general_model_params['max_seq_len'])
+        return ExperimentDataset(data)

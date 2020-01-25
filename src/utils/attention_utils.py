@@ -7,15 +7,6 @@ scores from a trained BERT model.
 
 import torch
 
-
-str_to_dtype = {
-    "long":torch.long,
-    "uint8":torch.uint8,
-    "float":torch.float,
-    "int16":torch.int16,
-    "int8":torch.int8
-}
-
 def attention_score_window(data, indices, window_size=5):
     ''' Default method for processing attention_scores. '''
 
@@ -63,7 +54,7 @@ def window_attention_dist(data, indices, window_size):
 
             if len(list(entry.shape)) == 2:
                 curr_input = entry[:, curr_idx-window_size:curr_idx+window_size+1]
-            elif len(list(entry.shape)) == 1 :
+            elif len(list(entry.shape)) == 1:
                 curr_input = entry[curr_idx-window_size:curr_idx+window_size+1]
             else:
                 raise Exception("what's good with this 3d attention dist - what you doing?")

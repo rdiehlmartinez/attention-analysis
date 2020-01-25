@@ -43,6 +43,30 @@ def get_statistics(data_list, key):
 
 ################### Data Processing Utils ###################
 
+def glove2dict(src_filename):
+    """GloVe Reader.
+    Parameters
+    ----------
+    src_filename : str
+        Full path to the GloVe file to be processed.
+    Returns
+    -------
+    dict
+        Mapping words to their GloVe vectors.
+    """
+    data = {}
+    with open(src_filename) as f:
+        while True:
+            try:
+                line = next(f)
+                line = line.strip().split()
+                data[line[0]] = np.array(line[1: ], dtype=np.float)
+            except StopIteration:
+                break
+            except UnicodeDecodeError:
+                pass
+    return data
+
 # For bias classification task
 def sentence_to_POS_matrix(input_toks,
                            bias_label,
