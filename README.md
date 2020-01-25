@@ -17,3 +17,13 @@ To Do:
 * Understand BERT attention (keeping 12 heads vs 1)  
 * Moving away from windowing  
 * Future concern: Is it an issue that we are always predicting type of bias - what is we predict no bias also  
+
+
+
+Experiments to try running
+* Compute average attention scores of 6th layer
+* Get the weak labels
+  * POS, Glove, Marta (!)
+* Test out different averaging techniques
+* Move away from windowing --> how do we want to get the attention scores in this case?
+*
