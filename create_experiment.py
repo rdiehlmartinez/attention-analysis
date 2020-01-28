@@ -30,8 +30,8 @@ def main(experiment_type, experiment_name):
 			copyfile(params_fp, os.path.join(experiment_path, "experiment_params.json"))
 			copyfile(notebook_fp, os.path.join(experiment_path, "experiment.ipynb"))
 		else:
-			_ = open(os.path.join(type_path, "experiment_params.json"), 'w').close()
-			_ = open(os.path.join(type_path, "experiment.ipynb"), 'w').close()
+			_ = open(os.path.join(experiment_path, "experiment_params.json"), 'w').close()
+			_ = open(os.path.join(experiment_path, "experiment.ipynb"), 'w').close()
 	else:
 		os.mkdir(type_path)
 
