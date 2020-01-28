@@ -17,11 +17,11 @@ class Params(object):
     def __repr__(self):
         return json.dumps(self.__dict__, sort_keys=True, indent=3)
 
-@classmethod
-def read_params(path):
-    '''
-    Reads in json parameter file and created a Params Object.
-    '''
-    assert('.json' in path), "file passed into read_params() is not in json format"
-    with open(path) as json_file:
-        return Params(json_file)
+    @classmethod
+    def read_params(cls, path):
+        '''
+        Reads in json parameter file and created a Params Object.
+        '''
+        assert('.json' in path), "file passed into read_params() is not in json format"
+        with open(path) as json_file:
+            return cls(json_file)
