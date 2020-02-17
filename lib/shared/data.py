@@ -1,4 +1,4 @@
-__author__ = 'Ried Pryzant'
+__author__ = 'Reid Pryzant'
 '''
 File used for data pre-processing and tokenization. Contains util functions
 and constants.
@@ -124,10 +124,8 @@ def get_sentences_from_dataset(data_path):
     return toks_dict
 
 
-def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
-                 noise=False, add_del_tok=False,
-                 categories_path=None,
-                 convert_to_tensors=True):
+def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
+                 add_del_tok=False, categories_path=None, convert_to_tensors=True):
     global REL2ID
     global POS2ID
     global EDIT_TYPE2ID
@@ -151,32 +149,25 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
             for l in category_fp
         }
 
-    if target_labels_path is not None:
-        labels_dict = {}
-        target_labels = csv.reader(open(target_labels_path, 'r'),  delimiter='\t')
-        next(target_labels)
-        for row in target_labels:
-            # The structure of each row is
-            # ['Index', 'ID', 'Previous', 'Post', 'Epistemological', 'Framing', 'Noise']
-            preds = row[4:]
-            bias_index = preds.index('1')
+    #NOTE: we require that the TSV begins with some header
+    data_file = open(data_path)
+    header_line = next(data_file).strip().split('\t')
+    assert header_line[0] == 'id', "data file required to contain a header."
 
-            if(bias_index == 2):
-                raise Exception("Noise in label set found!")
+    for i, (line) in enumerate(tqdm(data_file)):
 
-            labels_dict[row[1]] = bias_index
-
-    for i, (line) in enumerate(tqdm(open(data_path))):
         parts = line.strip().split('\t')
 
-        # if there pos/rel info
+        labels_provided = False
+        # If len = 7 then we have epistemological/framing labels
         if len(parts) == 7:
-            [revid, pre, post, _, _, pos, rels] = parts
-        # no pos/rel info
+            labels_provided = True
+            [revid, pre, post, pos, rels, epistemological, framing] = parts
+
+        # If len = 5 then we have no labels
         elif len(parts) == 5:
-            [revid, pre, post, _, _] = parts
-            pos = ' '.join(['<UNK>'] * len(pre.strip().split()))
-            rels = ' '.join(['<UNK>'] * len(pre.strip().split()))
+            [revid, pre, post, pos, rels] = parts
+
         # broken line
         else:
             skipped += 1
@@ -249,9 +240,11 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
         input_mask = pad([0] * len(tokens), 1)
         pre_len = len(tokens)
 
-        if target_labels_path is not None:
+        if labels_provided:
             try:
-                bias_label = labels_dict[revid]
+                bias_label = 0 if epistemological else 1
+                if bias_label == 1:
+                    assert framing, "Processing error: both epistemological and framing labels are true."
             except KeyError:
                 continue
 
@@ -266,7 +259,7 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
         out['pos_ids'].append(pos_ids)
         out['categories'].append(categories)
         out['index'].append(i)
-        if target_labels_path is not None:
+        if labels_provided:
             out['bias_label'].append(bias_label)
 
     if convert_to_tensors:
@@ -281,7 +274,7 @@ def get_examples(params, data_path, target_labels_path, tok2id, max_seq_len,
         out['pos_ids'] = torch.tensor(out['pos_ids'], dtype=torch.long)
         out['categories'] = torch.tensor(out['categories'], dtype=torch.float)
         out['index'] = torch.tensor(out['index'], dtype=torch.int32)
-        if target_labels_path is not None:
+        if labels_provided:
             out['bias_label'] = torch.tensor(out['bias_label'], dtype=torch.int16)
 
 
@@ -346,8 +339,6 @@ def get_dataloader(data_path, tok2id, batch_size, params, target_labels_path=Non
         noise=noise,
         add_del_tok=add_del_tok,
         categories_path=categories_path)
-
-    #pickle.dump(examples, open(pickle_path, 'wb'))
 
     if target_labels_path is not None:
         data = TensorDataset(

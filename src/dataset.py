@@ -14,7 +14,7 @@ import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler, Dataset
 from lib.shared.data import get_examples
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-from utils.data_utils import get_tok2id, str_to_dtype
+from src.utils.data_utils import get_tok2id, str_to_dtype
 
 class ExperimentDataset(Dataset):
     ''' Datasets used for experiments.'''
@@ -124,25 +124,29 @@ class ExperimentDataset(Dataset):
         return (train_dataloader, eval_dataloader, test_dataloader)
 
     @classmethod
-    def init_dataset(cls, intermediary_task_params, data_path='', labels_path=''):
+    def init_dataset(cls, params, data_path=''):
         '''
-        Initializes a dataset object which stores useful data for both attention
-        extraction and classification.
+        Initializes a dataset object which stores data for both attention
+        extraction and classification. The bulk of the data parsing is done
+        by the get_examples() function.
+
+        Note:
+        The general idea is that we always load in a dataset that has the tokens
+        as well as the labels - in case we are creating weak labels we can do
+        this too in the same way. The work of distinguishing if we have the
+        correct labels or not should be done in the get_examples function.
+
+        Args:
+            * params (a Params object): See params.py.
+            * data_path (string): Can override the location of the data to load in.
         '''
-        task_specific_params = intermediary_task_params['task_specific_params']
-        general_model_params = intermediary_task_params['general_model_params']
 
-        if data_path == '':
-            data_path = task_specific_params['target_data']
+        data_path = params.final_task['labeled_data']
+        general_model_params = params.intermediary_task['general_model_params']
 
-        if labels_path == '':
-            labels_path = task_specific_params['target_labels']
-
-        tok2id = get_tok2id(intermediary_task_params)
-
-        data = get_examples(intermediary_task_params,
+        tok2id = get_tok2id(params.intermediary_task)
+        data = get_examples(params.intermediary_task,
                             data_path,
-                            labels_path,
                             tok2id,
                             general_model_params['max_seq_len'])
         return ExperimentDataset(data)
