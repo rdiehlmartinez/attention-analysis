@@ -33,8 +33,7 @@ from src.utils.shared_utils import CUDA
 # Initializing a classification experiment classesmethod
 from .utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
 from sklearn.linear_model import SGDClassifier
-from models.shallow_nn import ShallowClassifier
-from models.full_attentional_nn import FullAttentionalClassifier
+from models.gru_cls import GRUClassifier
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from torch.optim import Adam, SGD
 
@@ -292,24 +291,17 @@ class ClassificationExperiment(Experiment):
 
         model_type = final_task_params['model']
 
-        #TODO: Deprecate both ShallowClassifier/FullAttentionalClassifier
-        # Recall: FullAttentionalClassifier is an affine combination over all
-        # of the attention weights
+        if model_type in ['shallow_nn', 'full_attentional']:
+            raise Exception("These model types have been deprecated!")
 
-        if model_type == 'shallow_nn':
-            input_dim = final_task_params['input_dim']
-            hidden_dim = final_task_params['hidden_dim']
-            output_dim = final_task_params['output_dim']
-            model = ShallowClassifier(input_dim, hidden_dim, output_dim)
+        elif model_type == 'gru':
+            # TODO
 
-        elif model_type == 'full_attentional':
-            num_attention_dists = final_task_params['num_attention_dists']
-            input_dim = final_task_params['input_dim']
-            hidden_dim = final_task_params['hidden_dim']
-            output_dim = final_task_params['output_dim']
-            model = FullAttentionalClassifier(num_attention_dists, input_dim, hidden_dim, output_dim)
-            
+        elif model_type == 'transformer':
+            raise NotImplementedError()
+
         elif model_type == 'bert_basic_uncased_sequence':
+            # If we are using a BERT model directly for classification
             model = BertForSequenceClassification.from_pretrained(
                 'bert-base-uncased',
                 num_labels=final_task_params['output_dim'])
