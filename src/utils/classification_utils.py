@@ -74,7 +74,7 @@ def logreg_multi_inference_func(self, dataloader, input_key, label_key, **kwargs
     predictions = np.stack(predictions, axis=0)
     return predictions, evaluations
 
-def run_boostrapping(classification_experiment,
+def run_bootstrapping(classification_experiment,
                      dataset,
                      params,
                      input_key='input',

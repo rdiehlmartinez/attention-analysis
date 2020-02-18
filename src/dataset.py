@@ -47,8 +47,12 @@ class ExperimentDataset(Dataset):
 
     def __len__(self):
         ''' Required by torch.Dataset '''
-        #all elements should have the same length
+        #all elements should have the same length bc they're stored as tensors
         return len(list(self.data.values())[0])
+
+    def __repr__(self):
+        ''' Creates information string about the class '''
+        return "Length: {} Keys: ".format(self.__len__()) + str(self.get_key_names())
 
     def remove_indices(self, indices):
         '''
@@ -106,8 +110,6 @@ class ExperimentDataset(Dataset):
 
         if data is None:
             data = self.data
-
-
 
         train_data = {key: val[:int(len(self) * train_split)] for key, val in data.items()}
         eval_data = {key: val[int(len(self) * train_split):int(len(self) * (train_split+eval_split))] \

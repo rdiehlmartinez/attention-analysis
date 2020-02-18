@@ -21,6 +21,7 @@ Experiment(obj):
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from tqdm import tqdm_notebook as tqdm
 import math
 import pickle
@@ -30,7 +31,7 @@ from sklearn.metrics import roc_auc_score
 from src.utils.shared_utils import CUDA
 
 # Initializing a classification experiment classesmethod
-from utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
+from .utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
 from sklearn.linear_model import SGDClassifier
 from models.shallow_nn import ShallowClassifier
 from models.full_attentional_nn import FullAttentionalClassifier
@@ -41,7 +42,7 @@ from torch.optim import Adam, SGD
 import lib.tagging.model as tagging_model
 import lib.seq2seq.model as seq2seq_model
 import lib.joint.model as complete_model
-from src.utils.data_utils import get_tok2id
+from  .utils.data_utils import get_tok2id
 
 class Hook():
     '''
@@ -167,7 +168,6 @@ class ClassificationExperiment(Experiment):
             if 'attention_mask_key' in kwargs:
                 masks = batch[kwargs.get("attention_mask_key")]
                 predict_logits = self.model(inputs, attention_mask=masks)
-                print(predict_logits)
             else:
                 predict_logits = self.model(inputs)
 
@@ -250,7 +250,7 @@ class ClassificationExperiment(Experiment):
                         evaluations.append(curr_eval)
 
                 else:
-                    # multi class
+                    # multi class --> for bias we are only doing binary classification
                     #TODO
                     raise NotImplementedError()
 
@@ -287,21 +287,28 @@ class ClassificationExperiment(Experiment):
     def init_cls_experiment(cls, final_task_params):
         '''
         Initializes a classification experiment based on parameters that are
-        passed in
+        passed in.
         '''
 
         model_type = final_task_params['model']
+
+        #TODO: Deprecate both ShallowClassifier/FullAttentionalClassifier
+        # Recall: FullAttentionalClassifier is an affine combination over all
+        # of the attention weights
+
         if model_type == 'shallow_nn':
             input_dim = final_task_params['input_dim']
             hidden_dim = final_task_params['hidden_dim']
             output_dim = final_task_params['output_dim']
             model = ShallowClassifier(input_dim, hidden_dim, output_dim)
+
         elif model_type == 'full_attentional':
             num_attention_dists = final_task_params['num_attention_dists']
             input_dim = final_task_params['input_dim']
             hidden_dim = final_task_params['hidden_dim']
             output_dim = final_task_params['output_dim']
             model = FullAttentionalClassifier(num_attention_dists, input_dim, hidden_dim, output_dim)
+            
         elif model_type == 'bert_basic_uncased_sequence':
             model = BertForSequenceClassification.from_pretrained(
                 'bert-base-uncased',
