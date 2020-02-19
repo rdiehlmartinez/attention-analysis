@@ -26,4 +26,3 @@ Experiments to try running
   * POS, Glove, Marta (!)
 * Test out different averaging techniques
 * Move away from windowing --> how do we want to get the attention scores in this case?
-*
