@@ -10,6 +10,9 @@ import torch
 def attention_score_window(data, indices, window_size=5):
     ''' Default method for processing attention_scores. '''
 
+    #TODO: Deprecate this code
+
+
     inputs = []
     labels = []
     skipped_indicies = []
@@ -28,6 +31,9 @@ def attention_score_window(data, indices, window_size=5):
 
 def window_attention_dist(data, indices, window_size):
     '''
+
+    # TODO: Deprecate this code
+
     Given a list of data which can either be dict of tensors or tensors,
     creates a window around the index that is passed in.
 
@@ -57,7 +63,7 @@ def window_attention_dist(data, indices, window_size):
             elif len(list(entry.shape)) == 1:
                 curr_input = entry[curr_idx-window_size:curr_idx+window_size+1]
             else:
-                raise Exception("what's good with this 3d attention dist - what you doing?")
+                raise Exception(">2D attention distribution cannot be processed.")
             windowed_data.append(curr_input)
 
     elif isinstance(data[0], dict):

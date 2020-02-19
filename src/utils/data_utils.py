@@ -5,6 +5,7 @@ Util functions to help with data processing and data extraction.
 '''
 
 import nltk
+import torch
 import numpy as np
 from tqdm import tqdm_notebook as tqdm
 from sklearn.feature_extraction import DictVectorizer
@@ -18,6 +19,14 @@ str_to_dtype = {
     "int16":torch.int16,
     "int8":torch.int8
 }
+
+def get_bias_indices(labels):
+    '''
+    Returns the index of of the first occurrence of a '1' in a tensor. Useful
+    for finding the first occurrence of a biased word.
+    '''
+    bias_indices = [label.flatten().tolist().index(1) for label in labels]
+    return bias_indices
 
 def get_sample_toks(data_path):
     ''' Returns a list of tokens/sentences from the dataset'''

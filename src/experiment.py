@@ -295,7 +295,7 @@ class ClassificationExperiment(Experiment):
             raise Exception("These model types have been deprecated!")
 
         elif model_type == 'gru':
-            # TODO
+            model = GRUClassifier(final_task_params)
 
         elif model_type == 'transformer':
             raise NotImplementedError()
