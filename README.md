@@ -3,27 +3,14 @@
 This library is the code-base that accompanies our in-progress workshop paper.
 We demonstrate that the attention distributions of trained BERT models
 provide strong enough signal to be used as the input themselves to downstream
-shallow neural networks. We demonstrate that by using attention distributions,
-we limit the amount of data we require to train classification models.
+shallow neural networks. This approach enables us to limit the amount of data we require to train classification models.
 
 To Do:
 
-* Clean up code base 
-    * Move Sabri functions into util file 
-    * Ensure that all the data is stored in the correct place  
-    * Ensure that all notebooks can be run 
 * Write script to cross-validate results, instead of running inference on a test dataset.
-* Implement baseline using inference on BERT  
-* Understand BERT attention (keeping 12 heads vs 1)  
-* Moving away from windowing  
-* Future concern: Is it an issue that we are always predicting type of bias - what is we predict no bias also  
+* Implement baselines/experiments listed below
+* Different classification models (e.g. transformer)
+* Understand BERT attention (keeping 12 heads vs 1) 
 
-
-
-Experiments to try running
-* Compute average attention scores of 6th layer
-* Get the weak labels
-  * POS, Glove, Marta (!)
-* Test out different averaging techniques
-* Move away from windowing --> how do we want to get the attention scores in this case?
-*
+Experiments to try running:
+https://docs.google.com/document/d/1_CX-DbHrUQOEmhAmAFVW5Et83q-f0s-6CHGFHdrvda0/edit?usp=sharing
