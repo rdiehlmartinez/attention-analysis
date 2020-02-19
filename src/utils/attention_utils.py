@@ -28,7 +28,6 @@ def concat_attention_dist(data):
         return_list.append(concat_tensor)
     return return_list
 
-
 def sum_attention_dist(data):
     '''
     Given a dataset of attentional distributions sums together all of the
@@ -47,6 +46,23 @@ def sum_attention_dist(data):
         sum_tensor = torch.stack(tensors, dim=0).sum(dim=0)
         return_list.append(sum_tensor)
     return return_list
+
+def avg_attention_dist(data):
+    '''
+    Given a dataset of attentional distributions averages all of the
+    attention distributions for each sample.
+
+    Args:
+        * data ([{layer index: torch tensor}]): list of dictionaries
+            storing the attention distribution for each sample.
+
+    Returns:
+        * return ([{index: torch tensor}])
+    '''
+    num_attention_layers = len(data[0])
+    sum_list = sum_attention_dist(data)
+    avg_list = [dist/num_attention_layers for dist in sum_list]
+    return avg_list
 
 def return_idx_attention_dist(data, indices):
     '''

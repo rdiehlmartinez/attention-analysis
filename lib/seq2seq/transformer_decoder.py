@@ -8,7 +8,7 @@ import torch
 import math
 
 import sys; sys.path.append('.')
-from tasks.bias_classification.lib.shared.constants import CUDA
+from lib.shared.constants import CUDA
 
 class PositionwiseFeedForward(nn.Module):
     """ A two-layer Feed-Forward-Network with residual layer norm.

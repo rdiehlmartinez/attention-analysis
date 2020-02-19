@@ -11,9 +11,9 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.nn.functional as F
 
 from pytorch_pretrained_bert.modeling import BertModel
-from tasks.bias_classification.lib.shared.constants import CUDA
-import tasks.bias_classification.lib.seq2seq.transformer_decoder as transformer
-from tasks.bias_classification.lib.shared.beam import Beam
+from lib.shared.constants import CUDA
+import lib.seq2seq.transformer_decoder as transformer
+from lib.shared.beam import Beam
 
 
 class BilinearAttention(nn.Module):

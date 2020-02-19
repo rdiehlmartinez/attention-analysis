@@ -13,6 +13,7 @@ from sklearn.linear_model import SGDClassifier
 from tqdm import tqdm_notebook as tqdm
 
 def logreg_train_for_epoch(self, dataloader, input_key, label_key, **kwargs):
+    ''' A basic training loop for sklearn logistic regression. By default uses SGD.'''
     accuracies = []
     label_classes = np.unique(dataloader.dataset.data[label_key])
     for step, batch in enumerate(dataloader):
@@ -60,7 +61,12 @@ def logreg_binary_inference_func(self, dataloader, input_key, label_key, thresho
     return predictions, evaluations
 
 def logreg_multi_inference_func(self, dataloader, input_key, label_key, **kwargs):
-    ''' For logistic regression multi-class inference'''
+    '''
+    For logistic regression multi-class inference. We currently do not call
+    this code. Left for future implementations where more than 2 types of
+    bias are to be classified.
+    '''
+
     predictions = []
     evaluations = []
     for step, batch in enumerate(dataloader):
@@ -76,25 +82,40 @@ def logreg_multi_inference_func(self, dataloader, input_key, label_key, **kwargs
 
 def run_bootstrapping(classification_experiment,
                      dataset,
-                     params,
+                     final_task_params,
+                     augmentation_dataset=None,
                      input_key='input',
                      label_key='label',
                      threshold=0.42,
                      statistics=["auc", "accuracy"],
-                     num_bootstrap_iters=100,
+                     num_bootstrap_iters=20,
                      **kwargs):
     '''
-    Randomly shuffles dataset and reports confidence interval statistics
-    via using bootstrapping methods.
+    Randomly shuffles dataset and reports statistics along with
+    their associate confidence intervals. The statistics are reported as the
+    cross-validatedself.
+
+    Args:
+        * classification_experiment (ClassificationExperiment): A classification
+            experiment that stores the model we use for our classification, along
+            with other useful methods (see src/experiment).
+        * dataset (ExperimentDataset): The primary dataset that we are training
+            and validating our model on. In practice, this will always be the
+            small dataset of ground-truth labels.
+        * params (Dictionary): dictionary of params for the classification task.
+        * augmentation_dataset (ExperimentDataset): Optional dataset of weak labels
+            that we can use to train our model on.
     '''
     stats_list = {statistic: [] for statistic in statistics}
-    for _ in tqdm(range(num_bootstrap_iters), desc='Bootstrapping'):
+
+    for _ in tqdm(range(num_bootstrap_iters), desc='Crossval Iteration'):
         dataset.shuffle_data()
-        data_split = params.final_task['data_split']
-        batch_size = params.final_task['training_params']['batch_size']
+        data_split = final_task_params['data_split']
+        batch_size = final_task_params['training_params']['batch_size']
         loaders = dataset.split_train_eval_test(**data_split, batch_size=batch_size)
+
         train_dataloader, eval_dataloader, _ = loaders
-        if params.final_task["model"] == "log_reg":
+        if final_task_params["model"] == "log_reg":
             classification_experiment.model = SGDClassifier(loss='log')
         else:
             classification_experiment.reinitialize_weights()

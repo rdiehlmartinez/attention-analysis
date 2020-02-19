@@ -8,7 +8,7 @@ import numpy as np
 
 from nltk.parse.stanford import StanfordDependencyParser
 
-from tasks.bias_classification.lib.shared.data import REL2ID, POS2ID
+from lib.shared.data import REL2ID, POS2ID
 
 class Featurizer:
 
@@ -98,7 +98,7 @@ class Featurizer:
 
 
     def features(self, id_seq, rel_ids, pos_ids):
-        
+
         if self.pad_id in id_seq:
             pad_idx = id_seq.index(self.pad_id)
             pad_len = len(id_seq[pad_idx:])

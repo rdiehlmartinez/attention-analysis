@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 from torch.autograd import Variable
 from tqdm import tqdm
-from tasks.bias_classification.lib.shared.constants import CUDA
+from lib.shared.constants import CUDA
 
 class JointModel(nn.Module):
     def __init__(self, params, debias_model, tagging_model):

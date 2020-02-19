@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 import copy
-import tasks.bias_classification.lib.tagging.features as features
-from tasks.bias_classification.lib.shared.constants import CUDA
+import lib.tagging.features as features
+from lib.shared.constants import CUDA
 
 class ConcatCombine(nn.Module):
     def __init__(self, hidden_size, feature_size, out_size, layers,

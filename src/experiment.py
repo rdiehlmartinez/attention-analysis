@@ -148,7 +148,7 @@ class ClassificationExperiment(Experiment):
         '''
         self._inference_func = func
 
-    def __default_train_for_epoch(self, dataloader, input_key, label_key, **kwargs):
+    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_every=50, **kwargs):
         ''' Abstract training loop for neural network target task training'''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -156,7 +156,7 @@ class ClassificationExperiment(Experiment):
 
         self.model.train()
         losses = []
-        for step, batch in tqdm(enumerate(dataloader), desc='train_step'):
+        for step, batch in enumerate(dataloader):
             if CUDA:
                 self.model.cuda()
                 batch = {key: val.cuda() for key, val in batch.items()}
@@ -181,7 +181,9 @@ class ClassificationExperiment(Experiment):
             loss = self.loss_fn(predict_logits, labels.to(dtype=torch.float))
 
             loss.backward()
-            print(loss.item())
+
+            if step % print_every == 0:
+                print("Step: {} ; Loss {} ".format(step, loss.item()))
 
             self.optimizer.step()
             self.model.zero_grad()
@@ -204,7 +206,7 @@ class ClassificationExperiment(Experiment):
 
         return_evaluations = label_key != ''
 
-        for step, batch in tqdm(enumerate(dataloader), desc='inference_step'):
+        for step, batch in enumerate(dataloader):
             if CUDA:
                 self.model.cuda()
                 batch = {key: val.cuda() for key, val in batch.items()}
@@ -265,7 +267,7 @@ class ClassificationExperiment(Experiment):
         all_losses = []
         all_evaluations = []
 
-        for epoch in tqdm(range(num_epochs), desc="epoch training", leave=False):
+        for epoch in tqdm(range(num_epochs), desc='epochs'):
             keys = {"input_key":input_key,
                     "label_key":label_key,
                     "threshold":threshold}

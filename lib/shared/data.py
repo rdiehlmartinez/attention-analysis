@@ -163,8 +163,6 @@ def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
         if len(parts) == 7:
             labels_provided = True
             [revid, pre, post, pos, rels, epistemological, framing] = parts
-            print(epistemological)
-            print(framing)
 
         # If len = 5 then we have no labels
         elif len(parts) == 5:
@@ -248,7 +246,6 @@ def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
                 bias_label = 0 if int(epistemological) else 1
                 if bias_label == 1:
                     assert int(framing), "Processing error: both epistemological and framing labels are true."
-                print(bias_label)
             except KeyError:
                 continue
 
@@ -262,7 +259,7 @@ def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
         out['rel_ids'].append(rel_ids)
         out['pos_ids'].append(pos_ids)
         out['categories'].append(categories)
-        out['index'].append(i)
+        out['index'].append(i) # can do some hash thing
         if labels_provided:
             out['bias_label'].append(bias_label)
 
