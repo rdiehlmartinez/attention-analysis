@@ -274,9 +274,10 @@ class ClassificationExperiment(Experiment):
             kwargs = {**kwargs, **keys}
 
             losses = self._train_for_epoch(dataloader=train_dataloader, **kwargs)
-            predictions, evaluations = self.run_inference(dataloader=eval_dataloader, **kwargs)
             all_losses.append(losses)
-            all_evaluations.append(evaluations)
+            if eval_dataloader is not None:
+                predictions, evaluations = self.run_inference(dataloader=eval_dataloader, **kwargs)
+                all_evaluations.append(evaluations)
 
         return all_losses, all_evaluations
 

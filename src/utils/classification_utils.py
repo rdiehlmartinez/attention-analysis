@@ -108,7 +108,7 @@ def run_bootstrapping(classification_experiment,
     '''
     stats_list = {statistic: [] for statistic in statistics}
 
-    for _ in tqdm(range(num_bootstrap_iters), desc='Crossval Iteration'):
+    for _ in tqdm(range(num_bootstrap_iters), desc='Cross Validation Iteration'):
         dataset.shuffle_data()
         data_split = final_task_params['data_split']
         batch_size = final_task_params['training_params']['batch_size']
@@ -120,12 +120,21 @@ def run_bootstrapping(classification_experiment,
         else:
             classification_experiment.reinitialize_weights()
 
+        if augmentation_dataset is not None:
+            augmentation_dataloader = augmentation_dataset.return_dataloader(batch_size=batch_size)
+            classification_experiment.train_model(augmentation_dataloader,
+                                                  None,
+                                                  input_key=input_key,
+                                                  label_key=label_key,
+                                                  threshold=threshold,
+                                                  **kwargs)
+
         _, evaluations = classification_experiment.train_model(train_dataloader,
-                                                                eval_dataloader,
-                                                                input_key=input_key,
-                                                                label_key=label_key,
-                                                                threshold=threshold,
-                                                                **kwargs)
+                                                               eval_dataloader,
+                                                               input_key=input_key,
+                                                               label_key=label_key,
+                                                               threshold=threshold,
+                                                               **kwargs)
         avg_evaluations = [average_data(epoch_evaluations) for epoch_evaluations in evaluations]
         for statistic in statistics:
             _, max_statistic, _ = get_statistics(avg_evaluations, statistic)
