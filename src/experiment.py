@@ -34,6 +34,7 @@ from src.utils.shared_utils import CUDA
 from .utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
 from sklearn.linear_model import SGDClassifier
 from models.gru_cls import GRUClassifier
+from model.shallow_nn import ShallowClassifier
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from torch.optim import Adam, SGD
 
@@ -148,7 +149,7 @@ class ClassificationExperiment(Experiment):
         '''
         self._inference_func = func
 
-    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_every=50, **kwargs):
+    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_every=3, **kwargs):
         ''' Abstract training loop for neural network target task training'''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -276,7 +277,7 @@ class ClassificationExperiment(Experiment):
             losses = self._train_for_epoch(dataloader=train_dataloader, **kwargs)
             all_losses.append(losses)
             if eval_dataloader is not None:
-                predictions, evaluations = self.run_inference(dataloader=eval_dataloader, **kwargs)
+                _, evaluations = self.run_inference(dataloader=eval_dataloader, **kwargs)
                 all_evaluations.append(evaluations)
 
         return all_losses, all_evaluations
@@ -294,11 +295,15 @@ class ClassificationExperiment(Experiment):
 
         model_type = final_task_params['model']
 
-        if model_type in ['shallow_nn', 'full_attentional']:
-            raise Exception("These model types have been deprecated!")
+        if model_type == 'full_attentional']:
+            # This model was primarily used in CS224U experiments
+            raise Exception("This model type has been deprecated!")
 
         elif model_type == 'gru':
             model = GRUClassifier(final_task_params)
+
+        elif model_type == 'shallow_nn':
+            model = ShallowClassifier(final_task_params)
 
         elif model_type == 'transformer':
             raise NotImplementedError()

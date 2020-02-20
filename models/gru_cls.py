@@ -22,6 +22,7 @@ class GRUClassifier(nn.Module):
                  task passed in from a params object. See src/params for a definition
                  of this class.
             * output_dim (int): Set to 1 since we are doing binary classification.
+            * bidirectional (bool): Whether the GRU should be bidirecional.
         '''
         super().__init__()
 
@@ -49,7 +50,7 @@ class GRUClassifier(nn.Module):
 
         # We concatenate the last hidden layer of the forward and backward model
         hidden_concat = torch.cat([hidden[-1], hidden[-2]], dim=1)
-        
+
         hidden_concat = self.relu(hidden_concat)
         output = self.fc(hidden_concat)
         return output
