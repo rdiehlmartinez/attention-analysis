@@ -1,0 +1,21 @@
+{
+  "final_task":{
+    "labeled_data":"../../../../../data/small_bias.tsv",
+    "model":"shallow_nn",
+    "input_dim": 32,
+    "hidden_dim":10,
+    "output_dim":1,
+    "data_split":{
+      "train_split":0.7,
+      "eval_split": 0.3,
+      "test_split": 0
+    },
+    "training_params":{
+      "optimizer":"adam",
+      "loss":"bce_with_logits",
+      "num_epochs":200,
+      "batch_size":32,
+      "lr":1e-3
+    }
+  }
+}
