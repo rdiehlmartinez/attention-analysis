@@ -25,8 +25,8 @@ class BilinearAttention(nn.Module):
         # sanity check that pointer_generator is active
 
         self.params = params
-        if self.params['task_specific_params']['coverage']:
-            assert self.params['task_specific_params']['pointer_generator']
+        if self.params['coverage']:
+            assert self.params['pointer_generator']
 
         super(BilinearAttention, self).__init__()
         self.query_in_projection = nn.Linear(hidden, hidden)
@@ -55,7 +55,7 @@ class BilinearAttention(nn.Module):
             if no value is specified, then values = keys
         """
 
-        if self.params['task_specific_params']['coverage']:
+        if self.params['coverage']:
             keys_in, cov = keys
             att_keys = self.key_in_projection(keys_in) + self.cov_projection(cov)
 
@@ -267,11 +267,11 @@ class Seq2Seq(nn.Module):
         self.h_t_projection = nn.Linear(hidden_size, hidden_size)
         self.c_t_projection = nn.Linear(hidden_size, hidden_size)
 
-        self.bridge = nn.Linear(768 if self.params['task_specific_params']['bert_encoder'] else self.hidden_dim, self.hidden_dim)
+        self.bridge = nn.Linear(768 if self.params['bert_encoder'] else self.hidden_dim, self.hidden_dim)
 
-        if self.params['task_specific_params']['transformer_decoder']:
+        if self.params['transformer_decoder']:
             self.decoder = transformer.TransformerDecoder(
-                num_layers=self.params['task_specific_params']['transformer_layers'],
+                num_layers=self.params['transformer_layers'],
                 d_model=self.hidden_dim,
                 heads=8,
                 d_ff=self.hidden_dim,
@@ -293,25 +293,25 @@ class Seq2Seq(nn.Module):
         self.init_weights()
 
         # pretrained embs from bert (after init to avoid overwrite)
-        if self.params['task_specific_params']['bert_word_embeddings'] or \
-        self.params['task_specific_params']['bert_full_embeddings'] or \
-        self.params['task_specific_params']['bert_encoder']:
+        if self.params['bert_word_embeddings'] or \
+        self.params['bert_full_embeddings'] or \
+        self.params['bert_encoder']:
             model = BertModel.from_pretrained(
-                'bert-base-uncased',
-                self.params['task_specific_params']['working_dir'] + '/cache')
+                self.params['bert_model'],
+                self.params['working_dir'] + '/cache')
 
-            if self.params['task_specific_params']['bert_word_embeddings']:
+            if self.params['bert_word_embeddings']:
                 self.embeddings = model.embeddings.word_embeddings
 
-            if self.params['task_specific_params']['bert_encoder']:
+            if self.params['bert_encoder']:
                 self.encoder = model
                 # share bert word embeddings with decoder
                 self.embeddings = model.embeddings.word_embeddings
 
-            if self.params['task_specific_params']['bert_full_embeddings']:
+            if self.params['bert_full_embeddings']:
                 self.embeddings = model.embeddings
 
-        if self.params['task_specific_params']['freeze_embeddings']:
+        if self.params['freeze_embeddings']:
             for param in self.embeddings.parameters():
                 param.requires_grad = False
 
@@ -330,7 +330,7 @@ class Seq2Seq(nn.Module):
         global CUDA
 
         src_emb = self.embeddings(pre_id)
-        if self.params['task_specific_params']['bert_encoder']:
+        if self.params['bert_encoder']:
             # final_hidden_states is [batch_size, sequence_length,
             # hidden_size].
             final_hidden_states, _ = self.encoder(pre_id,
@@ -355,7 +355,7 @@ class Seq2Seq(nn.Module):
             h_t = torch.cat((src_h_t[-1], src_h_t[-2]), 1)
             c_t = torch.cat((src_c_t[-1], src_c_t[-2]), 1)
 
-        if self.params['task_specific_params']['sigmoid_bridge']:
+        if self.params['sigmoid_bridge']:
             h_t = nn.Sigmoid()(h_t)
             c_t = nn.Sigmoid()(h_t)
 
@@ -364,7 +364,7 @@ class Seq2Seq(nn.Module):
     def run_decoder(self, pre_id, src_outputs, dec_initial_state, tgt_in_id, pre_mask, tok_dist=None, ignore_enrich=False):
 
         # optionally enrich src with tok enrichment
-        if not self.params['task_specific_params']['no_tok_enrich'] and not ignore_enrich:
+        if not self.params['no_tok_enrich'] and not ignore_enrich:
             enrichment = self.enricher(self.enrich_input).repeat(
                 src_outputs.shape[0], src_outputs.shape[1], 1)
             enrichment = tok_dist.unsqueeze(2) * enrichment

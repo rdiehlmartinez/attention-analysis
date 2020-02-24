@@ -16,8 +16,8 @@ class JointModel(nn.Module):
         self.token_sm = nn.Softmax(dim=2)
         self.time_sm = nn.Softmax(dim=1)
         self.tok_threshold = nn.Threshold(
-            self.params['task_specific_params']['zero_threshold'] ,
-            -10000.0 if self.params['task_specific_params']['sequence_softmax']  else 0.0)
+            self.params['zero_threshold'] ,
+            -10000.0 if self.params['sequence_softmax']  else 0.0)
 
     def run_tagger(self, pre_id, pre_mask, rel_ids=None, pos_ids=None,
                    categories=None):
@@ -26,15 +26,15 @@ class JointModel(nn.Module):
             pos_ids=pos_ids, categories=categories)
 
         tok_probs = tok_logits[:, :, :2]
-        if self.params['task_specific_params']['token_softmax']:
+        if self.params['token_softmax']:
             tok_probs = self.token_sm(tok_probs)
         is_bias_probs = tok_probs[:, :, -1]
         is_bias_probs = is_bias_probs.masked_fill(pre_mask, 0.0)
 
-        if self.params['task_specific_params']['zero_threshold'] > -10000.0:
+        if self.params['zero_threshold'] > -10000.0:
             is_bias_probs = self.tok_threshold(is_bias_probs)
 
-        if self.params['task_specific_params']['sequence_softmax']:
+        if self.params['sequence_softmax']:
             is_bias_probs = self.time_sm(is_bias_probs)
 
         return is_bias_probs, tok_logits

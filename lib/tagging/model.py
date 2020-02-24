@@ -82,28 +82,28 @@ class BertForMultitaskWithFeaturesOnTop(PreTrainedBertModel):
 
         self.featurizer = features.Featurizer(
             tok2id,
-            lexicon_feature_bits = params['task_specific_params']['lexicon_feature_bits'],
+            lexicon_feature_bits = params['lexicon_feature_bits'],
             params = params)
-        nfeats = 90 if params['task_specific_params']['lexicon_feature_bits'] == 1 else 118
+        nfeats = 90 if params['lexicon_feature_bits'] == 1 else 118
 
         self.tok_classifier = ConcatCombine(
             config.hidden_size,
             nfeats,
             tok_num_labels,
-            params['task_specific_params']['combiner_layers'],
+            params['combiner_layers'],
             config.hidden_dropout_prob,
-            params['task_specific_params']['small_waist'],
-            pre_enrich = params['task_specific_params']['pre_enrich'],
-            activation = params['task_specific_params']['activation_hidden'],
-            include_categories = params['task_specific_params']['concat_categories'],
-            category_emb = params['task_specific_params']['category_emb'],
-            add_category_emb= params['task_specific_params']['add_category_emb'],)
+            params['small_waist'],
+            pre_enrich = params['pre_enrich'],
+            activation = params['activation_hidden'],
+            include_categories = params['concat_categories'],
+            category_emb = params['category_emb'],
+            add_category_emb = params['add_category_emb'],)
 
         self.cls_dropout = nn.Dropout(config.hidden_dropout_prob)
         self.cls_classifier = nn.Linear(config.hidden_size, cls_num_labels)
 
-        self.category_emb = params['task_specific_params']['category_emb']
-        if params['task_specific_params']['category_emb']:
+        self.category_emb = params['category_emb']
+        if params['category_emb']:
             self.category_embeddings = nn.Embedding(43, nfeats)
 
         self.apply(self.init_bert_weights)
@@ -129,7 +129,7 @@ class BertForMultitaskWithFeaturesOnTop(PreTrainedBertModel):
         pooled_output = self.cls_dropout(pooled_output)
         cls_logits = self.cls_classifier(pooled_output)
 
-        if self.params['task_specific_params']['category_emb']:
+        if self.params['category_emb']:
             categories = self.category_embeddings(
                 categories.max(-1)[1].type(
                     'torch.cuda.LongTensor' if CUDA else 'torch.LongTensor'))

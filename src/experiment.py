@@ -34,7 +34,7 @@ from src.utils.shared_utils import CUDA
 from .utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
 from sklearn.linear_model import SGDClassifier
 from models.gru_cls import GRUClassifier
-from model.shallow_nn import ShallowClassifier
+from models.shallow_nn import ShallowClassifier
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from torch.optim import Adam, SGD
 
@@ -149,7 +149,7 @@ class ClassificationExperiment(Experiment):
         '''
         self._inference_func = func
 
-    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_every=3, **kwargs):
+    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_loss_every=0, **kwargs):
         ''' Abstract training loop for neural network target task training'''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -183,7 +183,7 @@ class ClassificationExperiment(Experiment):
 
             loss.backward()
 
-            if step % print_every == 0:
+            if print_loss_every and step % print_loss_every == 0:
                 print("Step: {} ; Loss {} ".format(step, loss.item()))
 
             self.optimizer.step()
@@ -243,7 +243,7 @@ class ClassificationExperiment(Experiment):
                         try:
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
-                            print("All labels are of the same type – skipping AUC calculation")
+                            # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
                         curr_eval = {"num_examples":len(labels),
@@ -268,7 +268,7 @@ class ClassificationExperiment(Experiment):
         all_losses = []
         all_evaluations = []
 
-        for epoch in tqdm(range(num_epochs), desc='epochs'):
+        for epoch in tqdm(range(num_epochs), desc='epochs', leave=None):
             keys = {"input_key":input_key,
                     "label_key":label_key,
                     "threshold":threshold}
@@ -295,7 +295,7 @@ class ClassificationExperiment(Experiment):
 
         model_type = final_task_params['model']
 
-        if model_type == 'full_attentional']:
+        if model_type == 'full_attentional':
             # This model was primarily used in CS224U experiments
             raise Exception("This model type has been deprecated!")
 
@@ -481,7 +481,9 @@ class AttentionExperiment(Experiment):
         return attention_scores_list
 
     @classmethod
-    def initialize_attention_experiment(cls, intermediary_task_params, verbose=False):
+    def initialize_attention_experiment(cls, intermediary_task_params,
+                                             dataset_params,
+                                             verbose=False):
         '''
         Takes in a params object and intializes an Experiment object. To intialize
         an Experiment object, the user has to provide a bert model that has been
@@ -490,11 +492,18 @@ class AttentionExperiment(Experiment):
         user also has to provide a function which given a batch can generate
         token input that can be read in by the extarct_attention_scores method
         of the Experiment class.
+
+        Args:
+            * intermediary_task_params (dict): Dictionary of parameters for
+                 the intermediary model from which we will extract the attention
+                 scores.
+            * dataset_params (dict): Dictionary of parameters for the dataset
+                that will be used to extract attention scores from.
         '''
-        task_specific_params = intermediary_task_params['task_specific_params']
         general_model_params = intermediary_task_params['general_model_params']
 
-        tok2id = get_tok2id(intermediary_task_params)
+        # Use the dataset parameters to load in the tokenizer
+        tok2id = get_tok2id(dataset_params)
         tok2id['<del>'] = len(tok2id)
 
         if verbose:
@@ -504,18 +513,18 @@ class AttentionExperiment(Experiment):
         ######################## Specifying Model #####################
 
         tag_model = tagging_model.BertForMultitaskWithFeaturesOnTop.from_pretrained(
-                    task_specific_params['bert_model'],
-                    params=intermediary_task_params,
-                    cls_num_labels=task_specific_params['num_categories'],
-                    tok_num_labels=task_specific_params['num_tok_labels'],
-                    cache_dir=task_specific_params['working_dir'] + '/cache',
+                    general_model_params['bert_model'],
+                    params=general_model_params,
+                    cls_num_labels=dataset_params['num_categories'],
+                    tok_num_labels=dataset_params['num_tok_labels'],
+                    cache_dir=general_model_params['working_dir'] + '/cache',
                     tok2id=tok2id)
 
         if CUDA:
             tag_model = tag_model.eval().cuda()
 
         debias_model = seq2seq_model.PointerSeq2Seq(
-            intermediary_task_params,
+            params=general_model_params,
             vocab_size=len(tok2id),
             hidden_size=general_model_params['hidden_size'],
             emb_dim=general_model_params['emb_dim'],
@@ -526,7 +535,7 @@ class AttentionExperiment(Experiment):
             debias_model = debias_model.eval().cuda()
 
         checkpoint = torch.load(intermediary_task_params['model_path'])
-        joint_model = complete_model.JointModel(intermediary_task_params,
+        joint_model = complete_model.JointModel(params=general_model_params,
                                                 debias_model=debias_model,
                                                 tagging_model=tag_model)
         joint_model.load_state_dict(checkpoint)

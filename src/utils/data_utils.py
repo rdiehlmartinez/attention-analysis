@@ -32,11 +32,10 @@ def get_sample_toks(data_path):
     ''' Returns a list of tokens/sentences from the dataset'''
     return get_sentences_from_dataset(data_path)
 
-def get_tok2id(intermediary_task_params):
-    task_specific_params = intermediary_task_params['task_specific_params']
+def get_tok2id(dataset_params):
     tokenizer = BertTokenizer.from_pretrained(
-        task_specific_params['bert_model'],
-        cache_dir=task_specific_params['working_dir'] + '/cache')
+        dataset_params['bert_model'],
+        cache_dir=dataset_params['working_dir'] + '/cache')
     tok2id = tokenizer.vocab
     return tok2id
 

@@ -126,7 +126,7 @@ class ExperimentDataset(Dataset):
         return (train_dataloader, eval_dataloader, test_dataloader)
 
     @classmethod
-    def init_dataset(cls, params, data_path=''):
+    def init_dataset(cls, dataset_params, data_path=''):
         '''
         Initializes a dataset object which stores data for both attention
         extraction and classification. The bulk of the data parsing is done
@@ -143,12 +143,11 @@ class ExperimentDataset(Dataset):
             * data_path (string): Can override the location of the data to load in.
         '''
 
-        data_path = params.final_task['labeled_data']
-        general_model_params = params.intermediary_task['general_model_params']
+        data_path = dataset_params['labeled_data']
 
-        tok2id = get_tok2id(params.intermediary_task)
-        data = get_examples(params.intermediary_task,
+        tok2id = get_tok2id(dataset_params)
+        data = get_examples(dataset_params,
                             data_path,
                             tok2id,
-                            general_model_params['max_seq_len'])
+                            dataset_params['max_seq_len'])
         return ExperimentDataset(data)

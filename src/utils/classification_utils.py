@@ -81,15 +81,15 @@ def logreg_multi_inference_func(self, dataloader, input_key, label_key, **kwargs
     return predictions, evaluations
 
 def run_bootstrapping(classification_experiment,
-                     dataset,
-                     final_task_params,
-                     augmentation_dataset=None,
-                     input_key='input',
-                     label_key='label',
-                     threshold=0.42,
-                     statistics=["auc", "accuracy"],
-                     num_bootstrap_iters=20,
-                     **kwargs):
+                      dataset,
+                      final_task_params,
+                      augmentation_dataset=None,
+                      input_key='input',
+                      label_key='label',
+                      threshold=0.42,
+                      statistics=["auc", "accuracy"],
+                      num_bootstrap_iters=5,
+                      **kwargs):
     '''
     Randomly shuffles dataset and reports statistics along with
     their associate confidence intervals. The statistics are reported as the
