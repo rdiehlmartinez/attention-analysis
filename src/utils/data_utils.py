@@ -33,11 +33,18 @@ def get_sample_toks(data_path):
     return get_sentences_from_dataset(data_path)
 
 def get_tok2id(dataset_params):
+    ''' Creates a dict mapping of tokens to their corresponding BERT ids '''
     tokenizer = BertTokenizer.from_pretrained(
         dataset_params['bert_model'],
         cache_dir=dataset_params['working_dir'] + '/cache')
     tok2id = tokenizer.vocab
     return tok2id
+
+def get_id2tok(dataset_params):
+    ''' Creates a dict mapping of BERT itds to their corresponding tokens '''
+    tok2id = get_tok2id(dataset_params)
+    id2tok = {x: tok for tok, x in tok2id.items()}
+    return id2tok
 
 def glove2dict(src_filename):
     """GloVe Reader.
