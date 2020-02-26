@@ -22,20 +22,20 @@ class Featurizer:
         self.params = params
 
         self.lexicons = {
-            'assertives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/assertives_hooper1975.txt'),
-            'entailed_arg': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/entailed_arg_berant2012.txt'),
-            'entailed': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/entailed_berant2012.txt'),
-            'entailing_arg': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/entailing_arg_berant2012.txt'),
-            'entailing': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/entailing_berant2012.txt'),
-            'factives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/factives_hooper1975.txt'),
-            'hedges': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/hedges_hyland2005.txt'),
-            'implicatives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/implicatives_karttunen1971.txt'),
-            'negatives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/negative_liu2005.txt'),
-            'positives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/positive_liu2005.txt'),
-            'npov': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/npov_lexicon.txt'),
-            'reports': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/report_verbs.txt'),
-            'strong_subjectives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/strong_subjectives_riloff2003.txt'),
-            'weak_subjectives': self.read_lexicon(self.params['task_specific_params']['lexicon_dir'] + '/weak_subjectives_riloff2003.txt')
+            'assertives': self.read_lexicon(self.params['lexicon_dir'] + '/assertives_hooper1975.txt'),
+            'entailed_arg': self.read_lexicon(self.params['lexicon_dir'] + '/entailed_arg_berant2012.txt'),
+            'entailed': self.read_lexicon(self.params['lexicon_dir'] + '/entailed_berant2012.txt'),
+            'entailing_arg': self.read_lexicon(self.params['lexicon_dir'] + '/entailing_arg_berant2012.txt'),
+            'entailing': self.read_lexicon(self.params['lexicon_dir'] + '/entailing_berant2012.txt'),
+            'factives': self.read_lexicon(self.params['lexicon_dir'] + '/factives_hooper1975.txt'),
+            'hedges': self.read_lexicon(self.params['lexicon_dir'] + '/hedges_hyland2005.txt'),
+            'implicatives': self.read_lexicon(self.params['lexicon_dir'] + '/implicatives_karttunen1971.txt'),
+            'negatives': self.read_lexicon(self.params['lexicon_dir'] + '/negative_liu2005.txt'),
+            'positives': self.read_lexicon(self.params['lexicon_dir'] + '/positive_liu2005.txt'),
+            'npov': self.read_lexicon(self.params['lexicon_dir'] + '/npov_lexicon.txt'),
+            'reports': self.read_lexicon(self.params['lexicon_dir'] + '/report_verbs.txt'),
+            'strong_subjectives': self.read_lexicon(self.params['lexicon_dir'] + '/strong_subjectives_riloff2003.txt'),
+            'weak_subjectives': self.read_lexicon(self.params['lexicon_dir'] + '/weak_subjectives_riloff2003.txt')
         }
         self.lexicon_feature_bits = lexicon_feature_bits
 

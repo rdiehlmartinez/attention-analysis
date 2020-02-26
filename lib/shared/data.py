@@ -124,15 +124,15 @@ def get_sentences_from_dataset(data_path):
     return toks_dict
 
 
-def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
+def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
                  add_del_tok=False, categories_path=None, convert_to_tensors=True):
     global REL2ID
     global POS2ID
     global EDIT_TYPE2ID
 
-    if params['task_specific_params']['drop_words'] is not None:
+    if dataset_params['drop_words'] is not None:
         drop_set = set([l.strip() for l in
-                   open(params['task_specific_params']['drop_words'])])
+                   open(dataset_params['drop_words'])])
     else:
         drop_set = None
 
@@ -159,12 +159,12 @@ def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
         parts = line.strip().split('\t')
 
         labels_provided = False
-        # If len = 7 then we have epistemological/framing labels
+        # NOTE If len = 7 then we have epistemological/framing labels
         if len(parts) == 7:
             labels_provided = True
             [revid, pre, post, pos, rels, epistemological, framing] = parts
 
-        # If len = 5 then we have no labels
+        # NOTE If len = 5 then we have no labels
         elif len(parts) == 5:
             [revid, pre, post, pos, rels] = parts
 
@@ -204,7 +204,7 @@ def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
             categories = np.random.uniform(size=43)   # 43 = number of categories
             categories = categories / sum(categories) # normalize
 
-        if params['task_specific_params']['category_input']:
+        if dataset_params['category_input']:
             category_id = np.argmax(categories)
             tokens = ['[unused%d]' % category_id] + tokens
             pre_tok_labels = [EDIT_TYPE2ID['mask']] + pre_tok_labels
@@ -219,10 +219,10 @@ def get_examples(params, data_path, tok2id, max_seq_len, noise=False,
             if noise:
                 pre_toks = noise_seq(
                     tokens[:],
-                    drop_prob=params['task_specific_params']['noise_prob'],
-                    shuf_dist=params['task_specific_params']['shuf_dist'],
+                    drop_prob=dataset_params['noise_prob'],
+                    shuf_dist=dataset_params['shuf_dist'],
                     drop_set=drop_set,
-                    keep_bigrams=params['task_specific_params']['keep_bigrams'])
+                    keep_bigrams=dataset_params['keep_bigrams'])
             else:
                 pre_toks = tokens
 
