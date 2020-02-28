@@ -64,19 +64,19 @@ def get_words_and_indices(toks):
         * toks ([Int]): A list containing the ids of the tokens in a particular entry.
     Returns
         * words ([String]): A list of word strings (joined together tokens).
-        * tok_to_word ({tok indices a word came from: word index}): Maps
+        * tok_to_word ({tok index a word came from: word indices}): Maps
             token indices to word indices.
     '''
     words = []
     tok_to_word = {}
     word_counter = 0
-    for tok in toks:
+    for idx, tok in enumerate(toks):
         if tok.startswith('##'):
             word_counter -= 1
             words[-1] += tok.replace('##', '')
         else:
             words.append(tok)
-        tok_to_word[tok] = word_counter
+        tok_to_word[idx] = word_counter
         word_counter += 1
 
     return (words, tok_to_word)
@@ -87,7 +87,7 @@ def load_glove_dict(dataset_params):
     with open(dataset_params['glove_data'], 'r+') as glove_file:
         for line in glove_file:
             line = line.split()
-            glove_dict[line[0]] = torch.tensor(np.array(line[1:], dtype=float))
+            glove_dict[line[0]] = torch.tensor(np.array(line[1:], dtype=float), dtype=torch.float)
     return glove_dict
 
 def get_glove_features(dataset_params, dataset):
@@ -122,8 +122,6 @@ def get_glove_features(dataset_params, dataset):
 
         # Figuring out what the index is of the first biased word
         bias_token_idx = entry["pre_tok_label_ids"].to(dtype=torch.int).flatten().tolist().index(1)
-
-        # TODO: figure out bug here
         bias_word = words[tok_to_word_idx[bias_token_idx]]
 
         # looking up bias word in GloVe
