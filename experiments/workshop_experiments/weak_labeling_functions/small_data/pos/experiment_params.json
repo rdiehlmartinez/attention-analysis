@@ -1,0 +1,33 @@
+{
+  "dataset":{
+      "labeled_data":"../../../../../data/small_bias.tsv",
+      "num_categories":43,
+      "num_tok_labels":3,
+      "working_dir":".",
+      "bert_model":"bert-base-uncased",
+      "drop_words":null,
+      "category_input":false,
+      "noise_prob":0.25,
+      "shuf_dist":3,
+      "keep_bigrams":false,
+      "max_seq_len":80
+  },
+  "final_task":{
+    "model":"shallow_nn",
+    "input_dim":-1,
+    "hidden_dim":-1,
+    "output_dim":1,
+    "data_split":{
+      "train_split":0.7,
+      "eval_split": 0.3,
+      "test_split": 0
+    },
+    "training_params":{
+      "optimizer":"adam",
+      "loss":"bce_with_logits",
+      "num_epochs":200,
+      "batch_size":32,
+      "lr":1e-3
+    }
+  }
+}
