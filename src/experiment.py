@@ -287,12 +287,14 @@ class ClassificationExperiment(Experiment):
         return self._inference_func(dataloader=dataloader, **kwargs)
 
     @classmethod
-    def init_cls_experiment(cls, final_task_params):
+    def init_cls_experiment(cls, params):
         '''
         Initializes a classification experiment based on parameters that are
         passed in.
         '''
-
+        
+        final_task_params = params.final_task
+        
         model_type = final_task_params['model']
 
         if model_type == 'full_attentional':
@@ -313,6 +315,24 @@ class ClassificationExperiment(Experiment):
             model = BertForSequenceClassification.from_pretrained(
                 'bert-base-uncased',
                 num_labels=final_task_params['output_dim'])
+            try:
+                load_from_checkpoint = final_task_params['finetuning']
+            except KeyError:
+                print("The params.final_task dictionary should contain the boolean \'finetuning\' parameter.")
+                load_from_checkpoint = False
+            
+            if load_from_checkpoint:
+                model_dict = model.state_dict()
+                pretrained_dict = torch.load(params.intermediary_task['model_path'])
+                pretrained_dict_clean = {}
+                for k, v in pretrained_dict.items():
+                    if k.startswith('tagging_model.bert'):
+                        k_clean = k[len("tagging_model."):]
+                        if k_clean in model_dict:
+                            pretrained_dict_clean[k_clean] = v
+                model_dict.update(pretrained_dict_clean) 
+                model.load_state_dict(model_dict)
+
         elif model_type == 'log_reg':
             model = SGDClassifier(loss='log')
             train_for_epoch = logreg_train_for_epoch
