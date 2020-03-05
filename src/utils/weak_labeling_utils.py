@@ -7,6 +7,7 @@ labeling functions.
 
 import numpy as np
 import torch
+from .data_utils import get_words_and_indices, get_tok2id, get_id2tok
 
 def get_marta_featurizer(dataset_params):
     '''
@@ -21,7 +22,6 @@ def get_marta_featurizer(dataset_params):
     '''
 
     from lib.tagging.features import Featurizer
-    from .data_utils import get_tok2id
 
     assert("lexicon_dir" in dataset_params.keys()), \
         "Lexicon directory path must be specified in the dataset parameters"
@@ -55,32 +55,6 @@ def extract_marta_features(dataset, featurizer):
     tensor_features = torch.tensor(np.stack(full_features), dtype=torch.float32)
     return tensor_features
 
-def get_words_and_indices(toks):
-    '''
-    Helper function that for a token sequence builds a list of
-    [words, [tok indices the word came from]].
-
-    Args:
-        * toks ([Int]): A list containing the ids of the tokens in a particular entry.
-    Returns
-        * words ([String]): A list of word strings (joined together tokens).
-        * tok_to_word ({tok index a word came from: word indices}): Maps
-            token indices to word indices.
-    '''
-    words = []
-    tok_to_word = {}
-    word_counter = 0
-    for idx, tok in enumerate(toks):
-        if tok.startswith('##'):
-            word_counter -= 1
-            words[-1] += tok.replace('##', '')
-        else:
-            words.append(tok)
-        tok_to_word[idx] = word_counter
-        word_counter += 1
-
-    return (words, tok_to_word)
-
 def load_glove_dict(dataset_params):
     ''' Given a path to a GloVe pretrained vectors file reads these into a dictionary.'''
     glove_dict = {}
@@ -106,7 +80,6 @@ def get_glove_features(dataset_params, dataset):
         * tensor_embeddings (tensor): a tensor of the same number of dimensions as the other tensors
             in the dataset - features contains the extracted features.
     '''
-    from .data_utils import get_id2tok
 
     embeddings = []
     id2tok = get_id2tok(dataset_params)
@@ -155,7 +128,6 @@ def get_pos_features(dataset_params, dataset):
         * pos_matrix (tensor): a tensor of the same number of dimensions as the other tensors
             in the dataset - features contains the extracted features.
     '''
-    from .data_utils import get_id2tok
     import nltk
     from sklearn.feature_extraction import DictVectorizer
 

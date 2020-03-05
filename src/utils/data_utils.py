@@ -71,3 +71,29 @@ def glove2dict(src_filename):
             except UnicodeDecodeError:
                 pass
     return data
+
+def get_words_and_indices(toks):
+    '''
+    Helper function that for a token sequence builds a list of
+    [words, [tok indices the word came from]].
+
+    Args:
+        * toks ([Int]): A list containing the ids of the tokens in a particular entry.
+    Returns
+        * words ([String]): A list of word strings (joined together tokens).
+        * tok_to_word ({tok index a word came from: word indices}): Maps
+            token indices to word indices.
+    '''
+    words = []
+    tok_to_word = {}
+    word_counter = 0
+    for idx, tok in enumerate(toks):
+        if tok.startswith('##'):
+            word_counter -= 1
+            words[-1] += tok.replace('##', '')
+        else:
+            words.append(tok)
+        tok_to_word[idx] = word_counter
+        word_counter += 1
+
+    return (words, tok_to_word)
