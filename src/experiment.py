@@ -287,19 +287,17 @@ class ClassificationExperiment(Experiment):
         return self._inference_func(dataloader=dataloader, **kwargs)
 
     @classmethod
-    def init_cls_experiment(cls, params):
+    def init_cls_experiment(cls, final_task_params):
         '''
         Initializes a classification experiment based on parameters that are
         passed in.
         '''
-        
-        final_task_params = params.final_task
-        
+
         model_type = final_task_params['model']
 
         if model_type == 'full_attentional':
             # This model was primarily used in CS224U experiments
-            raise Exception("This model type has been deprecated!")
+            raise Exception("Full attentional model type has been deprecated!")
 
         elif model_type == 'gru':
             model = GRUClassifier(final_task_params)
@@ -320,17 +318,19 @@ class ClassificationExperiment(Experiment):
             except KeyError:
                 print("The params.final_task dictionary should contain the boolean \'finetuning\' parameter.")
                 load_from_checkpoint = False
-            
+
             if load_from_checkpoint:
                 model_dict = model.state_dict()
-                pretrained_dict = torch.load(params.intermediary_task['model_path'])
+
+                assert('model_path' in final_task_params), "If load_from_checkpoint require to specify a path to the checkpoint."
+                pretrained_dict = torch.load(final_task_params['model_path'])
                 pretrained_dict_clean = {}
                 for k, v in pretrained_dict.items():
                     if k.startswith('tagging_model.bert'):
                         k_clean = k[len("tagging_model."):]
                         if k_clean in model_dict:
                             pretrained_dict_clean[k_clean] = v
-                model_dict.update(pretrained_dict_clean) 
+                model_dict.update(pretrained_dict_clean)
                 model.load_state_dict(model_dict)
 
         elif model_type == 'log_reg':

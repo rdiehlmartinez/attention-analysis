@@ -13,46 +13,9 @@
       "keep_bigrams":false,
       "max_seq_len":80
   },
-  "intermediary_task":{
-    "model_path":"../../../../../lib/debiaser/final_model/joint/model_7.ckpt",
-    "general_model_params":{
-      "bert_model":"bert-base-uncased", 
-      "working_dir":".",
-      "num_attention_heads":12,
-      "bert_full_embeddings":true,
-      "bert_word_embeddings":false,
-      "bert_encoder":true,
-      "transformer_decoder":false,
-      "transformer_layers":1,
-      "no_tok_enrich":false,
-      "freeze_embeddings":false,
-      "small_waist":false,  
-      "sigmoid_bridge":false,
-      "pointer_generator":true,
-      "coverage":false,
-      "token_softmax":true,
-      "zero_threshold":-10000.0,
-      "sequence_softmax":false,
-      "lexicon_dir":"../../../../../data/lexicons",
-      "pre_enrich":true,
-      "activation_hidden":true,
-      "concat_categories":false,
-      "category_emb":false,
-      "add_category_emb":false,
-      "combiner_layers":1,
-      "lexicon_feature_bits":1,
-      "num_layers":12,
-      "attention_head_size":768,
-      "hidden_size":512,
-      "emb_dim":768,
-      "dropout":0.2,
-      "max_seq_len":80
-    },
-    "attention":{
-    }
-  },
   "final_task":{
     "model":"bert_basic_uncased_sequence",
+    "model_path":"../../../../../lib/debiaser/final_model/joint/model_7.ckpt",
     "finetuning":true,
     "input_dim":80, 
     "hidden_dim":40,
@@ -67,8 +30,8 @@
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
-      "num_epochs":150,
-      "batch_size":32,
+      "num_epochs":3,
+      "batch_size":8,
       "lr":2e-3
     }
   }
