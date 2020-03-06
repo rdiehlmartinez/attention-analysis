@@ -24,7 +24,7 @@ def concat_attention_dist(data):
     return_list = []
     for sample_dict in data:
         _, tensors = zip(*sample_dict.items())
-        concat_tensor = torch.cat(tensors)
+        concat_tensor = torch.cat(tensors, dim=-1)
         return_list.append(concat_tensor)
     return return_list
 
@@ -63,6 +63,16 @@ def avg_attention_dist(data):
     sum_list = sum_attention_dist(data)
     avg_list = [dist/num_attention_layers for dist in sum_list]
     return avg_list
+
+def reduce_attention_dist(data, reducer):
+    if reducer == "sum":
+        return sum_attention_dist(data)
+    elif reducer == "avg":
+        return avg_attention_dist(data)
+    elif reducer == "concat":
+        return concat_attention_dist(data)
+    else:
+        raise ValueError("Bad parameter: \'reducer\' parameter not in {sum, avg, concat}.")
 
 def return_idx_attention_dist(data, indices):
     '''

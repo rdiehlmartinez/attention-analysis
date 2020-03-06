@@ -53,7 +53,7 @@
       "num_attention_heads":1,
       "attention_head_size":768,
       "attention_extraction_batch_size":1,
-      "reducer":"avg"
+      "reducer":"sum"
     }
   },
   "final_task":{
