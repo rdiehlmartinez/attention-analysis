@@ -196,3 +196,19 @@ def get_bert_features(dataset):
     # num_entries, dim
     tensor_embeddings = torch.stack(embeddings)
     return tensor_embeddings
+
+def generate_snorkel_matrix(predictions_list):
+    '''
+    Given a set of predictions genreated by labeling functions joins these
+    predictions together into one label matrix that can be processed by Metal Snorkel.
+
+    args:
+        * predictions_list ([List]): a list of the predictions
+            generates by the weak labeling functions. Predictions are a list of
+            int values.
+    returns:
+        * lf_matrix (np.matrix)
+    '''
+    predictions_list = [np.expand_dims(np.array(predictions), axis=1) for predictions in predictions_list]
+    lf_matrix = np.concatenate(predictions_list, axis=-1)
+    return lf_matrix

@@ -215,7 +215,7 @@ class ClassificationExperiment(Experiment):
             inputs = batch[input_key]
 
             if return_evaluations:
-                labels = batch[label_key]
+                labels = batch[label_key].cpu()
 
             batch_predictions = []
             with torch.no_grad():
