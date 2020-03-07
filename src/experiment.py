@@ -503,6 +503,7 @@ class AttentionExperiment(Experiment):
     @classmethod
     def initialize_attention_experiment(cls, intermediary_task_params,
                                              dataset_params,
+                                             from_pretrained=True,
                                              verbose=False):
         '''
         Takes in a params object and intializes an Experiment object. To intialize
@@ -554,11 +555,20 @@ class AttentionExperiment(Experiment):
         if CUDA:
             debias_model = debias_model.eval().cuda()
 
-        checkpoint = torch.load(intermediary_task_params['model_path'])
         joint_model = complete_model.JointModel(params=general_model_params,
                                                 debias_model=debias_model,
                                                 tagging_model=tag_model)
-        joint_model.load_state_dict(checkpoint)
+        
+        if from_pretrained:
+            if 'model_path' in intermediary_task_params and intermediary_task_params['model_path']:
+                checkpoint = torch.load(intermediary_task_params['model_path'])
+                joint_model.load_state_dict(checkpoint)
+                print("Instantiated joint model with pretrained weights.")
+            else:
+                print("Failed to instantiate joint model with pretrained weights, \
+                       falling back to default HuggingFace weights.")
+        else:
+            print("Instantiated joint model with default HuggingFace weights.")
 
         if CUDA:
             joint_model.eval()
