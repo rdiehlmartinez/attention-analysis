@@ -1,6 +1,9 @@
 {
   "dataset":{
-      "labeled_data":"../../../../../data/small_bias.tsv",
+      "labeled_data":"../../../../../data/small_data/bias_labeled_train.tsv",
+      "unlabeled_data":"../../../../../data/large_data/bias_unlabeled.tsv",
+      "save_out_file":"../../../../../data/large_data/bias_weak_labeled.pkl",
+      "labeled_data_dev":"../../../../../data/small_data/bias_labeled_dev.tsv",
       "lexicon_dir":"../../../../../data/lexicons",
       "num_categories":43,
       "num_tok_labels":3,
