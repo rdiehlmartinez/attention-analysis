@@ -1,6 +1,6 @@
 {
   "dataset":{
-      "labeled_data":"../../../../../data/small_bias.tsv",
+      "labeled_data":"../../../../../data/small_data/bias_labeled.tsv",
       "glove_data":"../../../../../data/word_embeddings/glove.6B.100d.txt",
       "glove_embedding_dim":100,
       "num_categories":43,

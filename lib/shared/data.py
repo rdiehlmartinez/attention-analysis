@@ -125,7 +125,9 @@ def get_sentences_from_dataset(data_path):
 
 
 def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
-                 add_del_tok=False, categories_path=None, convert_to_tensors=True):
+                 add_del_tok=False, categories_path=None, convert_to_tensors=True,
+                 no_bias_type_labels=False):
+
     global REL2ID
     global POS2ID
     global EDIT_TYPE2ID
@@ -158,20 +160,22 @@ def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
 
         parts = line.strip().split('\t')
 
-        labels_provided = False
-        # NOTE If len = 7 then we have epistemological/framing labels
-        if len(parts) == 7:
-            labels_provided = True
-            [revid, pre, post, pos, rels, epistemological, framing] = parts
-
-        # NOTE If len = 5 then we have no labels
-        elif len(parts) == 5:
-            [revid, pre, post, pos, rels] = parts
-
-        # broken line
+        if no_bias_type_labels:
+            if len(parts) == 5:
+                [revid, pre, post, pos, rels] = parts
+            elif len(parts) == 7:
+                [revid, pre, post, _, _, pos, rels] = parts
+            else:
+                skipped += 1
+                continue
         else:
-            skipped += 1
-            continue
+            if len(parts) == 7:
+                [revid, pre, post, pos, rels, epistemological, framing] = parts
+            elif len(parts) == 9:
+                [revid, pre, post, _, _, pos, rels, epistemological, framing] = parts
+            else:
+                skipped += 1
+                continue
 
         # break up tokens
         tokens = pre.strip().split()
@@ -230,6 +234,10 @@ def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
             post_in_ids = pad([tok2id[x] for x in post_input_tokens], 0)
             post_out_ids = pad([tok2id[x] for x in post_output_tokens], 0)
             pre_tok_label_ids = pad(pre_tok_labels, EDIT_TYPE2ID['mask'])
+            if 1 not in pre_tok_label_ids:
+                skipped += 1
+                continue
+
             post_tok_label_ids = pad(post_tok_labels, EDIT_TYPE2ID['mask'])
             rel_ids = pad([REL2ID.get(x, REL2ID['<UNK>']) for x in rels], 0)
             pos_ids = pad([POS2ID.get(x, POS2ID['<UNK>']) for x in pos], 0)
@@ -241,7 +249,7 @@ def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
         pre_len = len(tokens)
 
         # Adding label encodings --> 0: epistemological; 1:framing
-        if labels_provided:
+        if not no_bias_type_labels:
             try:
                 bias_label = 0 if int(epistemological) else 1
                 if bias_label == 1:
@@ -260,7 +268,7 @@ def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
         out['pos_ids'].append(pos_ids)
         out['categories'].append(categories)
         out['index'].append(i) # can do some hash thing
-        if labels_provided:
+        if not no_bias_type_labels:
             out['bias_label'].append(bias_label)
 
     if convert_to_tensors:
@@ -275,7 +283,7 @@ def get_examples(dataset_params, data_path, tok2id, max_seq_len, noise=False,
         out['pos_ids'] = torch.tensor(out['pos_ids'], dtype=torch.long)
         out['categories'] = torch.tensor(out['categories'], dtype=torch.float)
         out['index'] = torch.tensor(out['index'], dtype=torch.int32)
-        if labels_provided:
+        if not no_bias_type_labels:
             out['bias_label'] = torch.tensor(out['bias_label'], dtype=torch.int16)
 
 

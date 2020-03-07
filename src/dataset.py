@@ -126,6 +126,28 @@ class ExperimentDataset(Dataset):
         return (train_dataloader, eval_dataloader, test_dataloader)
 
     @classmethod
+    def init_dataset_without_labels(cls, dataset_params, data_path=''):
+        '''
+        Initializes a dataset object that does not contain any bias labels. We
+        do this when we load in a dataset that will receive labels from the
+        weak labeling functions.
+
+        Args:
+            * params (a Params object): See params.py.
+            * data_path (string): Can override the location of the data to load in.
+        '''
+        if data_path == '':
+            data_path = dataset_params['unlabeled_data']
+
+        tok2id = get_tok2id(dataset_params)
+        data = get_examples(dataset_params,
+                            data_path,
+                            tok2id,
+                            dataset_params['max_seq_len'],
+                            no_bias_type_labels=True)
+        return ExperimentDataset(data)
+
+    @classmethod
     def init_dataset(cls, dataset_params, data_path=''):
         '''
         Initializes a dataset object which stores data for both attention
@@ -143,7 +165,8 @@ class ExperimentDataset(Dataset):
             * data_path (string): Can override the location of the data to load in.
         '''
 
-        data_path = dataset_params['labeled_data']
+        if data_path == '':
+            data_path = dataset_params['labeled_data']
 
         tok2id = get_tok2id(dataset_params)
         data = get_examples(dataset_params,

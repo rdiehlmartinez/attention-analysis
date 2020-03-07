@@ -50,7 +50,7 @@ def get_bow_matrix(dataset_params, dataset):
         sentences.append(' '.join(words))
 
     # dataset_size, num_vocab
-    pos_matrix = vectorizer.transform(sentences)
+    pos_matrix = vectorizer.fit_transform(sentences).toarray()
     pos_tensor = torch.tensor(pos_matrix, dtype=torch.float32)
 
-    return pos_matrix
+    return pos_tensor

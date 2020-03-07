@@ -195,7 +195,7 @@ class ClassificationExperiment(Experiment):
             losses.append(curr_loss)
         return losses
 
-    def __default_inference_func(self, dataloader, input_key, label_key, threshold=0.42, **kwargs):
+    def __default_inference_func(self, dataloader, input_key, label_key='', threshold=0.42, **kwargs):
         ''' inference function for a neural network approach to a target task '''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -258,7 +258,7 @@ class ClassificationExperiment(Experiment):
 
         return predictions, evaluations
 
-    def train_model(self, train_dataloader, eval_dataloader,
+    def train_model(self, train_dataloader, eval_dataloader=None,
                     input_key="input",
                     label_key="label",
                     threshold=0.42, **kwargs):
