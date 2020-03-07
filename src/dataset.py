@@ -136,7 +136,8 @@ class ExperimentDataset(Dataset):
             * params (a Params object): See params.py.
             * data_path (string): Can override the location of the data to load in.
         '''
-        data_path = dataset_params['unlabeled_data']
+        if data_path == '':
+            data_path = dataset_params['unlabeled_data']
 
         tok2id = get_tok2id(dataset_params)
         data = get_examples(dataset_params,
@@ -164,7 +165,8 @@ class ExperimentDataset(Dataset):
             * data_path (string): Can override the location of the data to load in.
         '''
 
-        data_path = dataset_params['labeled_data']
+        if data_path == '':
+            data_path = dataset_params['labeled_data']
 
         tok2id = get_tok2id(dataset_params)
         data = get_examples(dataset_params,
