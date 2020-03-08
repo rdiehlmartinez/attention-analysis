@@ -165,11 +165,12 @@ class ClassificationExperiment(Experiment):
             inputs = batch[input_key]
             labels = batch[label_key]
 
+            model_args = {}
             if 'attention_mask_key' in kwargs:
-                masks = batch[kwargs.get("attention_mask_key")]
-                predict_logits = self.model(inputs, attention_mask=masks)
-            else:
-                predict_logits = self.model(inputs)
+                model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
+            if 'seq_len_key' in kwargs:
+                model_args["lengths"] = batch[kwargs.get("seq_len_key")]   
+            predict_logits = self.model(inputs, **model_args)
 
             if self.params['output_dim'] == 1:
                 # in binary case
@@ -221,13 +222,13 @@ class ClassificationExperiment(Experiment):
             with torch.no_grad():
                 if self.params['output_dim'] == 1:
                     # binary task
+                    model_args = {}
                     if 'attention_mask_key' in kwargs:
-                        masks = batch[kwargs.get("attention_mask_key")]
-                        predict_logits = self.model(inputs, attention_mask=masks)
-                    else:
-                        predict_logits = self.model(inputs)
+                        model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
+                    if 'seq_len_key' in kwargs:
+                        model_args["lengths"] = batch[kwargs.get("seq_len_key")]   
+                    predict_logits = self.model(inputs, **model_args)
 
-                    predict_logits = self.model(inputs).squeeze(1)
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
 
                     for prob in list(predict_probs):
@@ -261,6 +262,8 @@ class ClassificationExperiment(Experiment):
     def train_model(self, train_dataloader, eval_dataloader=None,
                     input_key="input",
                     label_key="label",
+                    seq_len_key="pre_lens",
+                    attention_mask_key="masks",
                     threshold=0.42, **kwargs):
 
         '''Trains self.model using parameters from self.params'''
@@ -271,6 +274,8 @@ class ClassificationExperiment(Experiment):
         for epoch in tqdm(range(num_epochs), desc='epochs', leave=None):
             keys = {"input_key":input_key,
                     "label_key":label_key,
+                    "seq_len_key":seq_len_key,
+                    "attention_mask_key":attention_mask_key,
                     "threshold":threshold}
             kwargs = {**kwargs, **keys}
 
