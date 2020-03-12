@@ -19,6 +19,7 @@ Experiment(obj):
 
 '''
 
+import os 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -169,7 +170,7 @@ class ClassificationExperiment(Experiment):
             if 'attention_mask_key' in kwargs:
                 model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
             if 'seq_len_key' in kwargs:
-                model_args["lengths"] = batch[kwargs.get("seq_len_key")]   
+                model_args["lengths"] = batch[kwargs.get("seq_len_key")]
             predict_logits = self.model(inputs, **model_args)
 
             if self.params['output_dim'] == 1:
@@ -226,7 +227,7 @@ class ClassificationExperiment(Experiment):
                     if 'attention_mask_key' in kwargs:
                         model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
                     if 'seq_len_key' in kwargs:
-                        model_args["lengths"] = batch[kwargs.get("seq_len_key")]   
+                        model_args["lengths"] = batch[kwargs.get("seq_len_key")]
                     predict_logits = self.model(inputs, **model_args)
 
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
@@ -372,6 +373,11 @@ class ClassificationExperiment(Experiment):
 
         return ClassificationExperiment(final_task_params, model, optimizer=optim, loss_fn=loss_func)
 
+    def save_model_weights(self, model_name):
+        ''' Saves out the model weights learned for a prticular model.'''
+        if (not os.path.isdir("model_weights")):
+            os.mkdir("model_weights")
+        torch.save(self.model.state_dict(), os.path.join("model_weights", model_name))
 
 class AttentionExperiment(Experiment):
     '''
@@ -563,7 +569,7 @@ class AttentionExperiment(Experiment):
         joint_model = complete_model.JointModel(params=general_model_params,
                                                 debias_model=debias_model,
                                                 tagging_model=tag_model)
-        
+
         if from_pretrained:
             if 'model_path' in intermediary_task_params and intermediary_task_params['model_path']:
                 checkpoint = torch.load(intermediary_task_params['model_path'])
