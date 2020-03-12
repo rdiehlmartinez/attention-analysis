@@ -19,10 +19,11 @@ Experiment(obj):
 
 '''
 
-import os 
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.nn.init as init
 from tqdm import tqdm_notebook as tqdm
 import math
 import pickle
@@ -114,18 +115,19 @@ class ClassificationExperiment(Experiment):
 
     def reinitialize_weights(self):
         '''Initializing model weights randomly '''
-        self.model.apply(ClassificationExperiment.weights_init_uniform_rule)
+        self.model.apply(ClassificationExperiment.weights_init)
 
     @staticmethod
-    def weights_init_uniform_rule(m):
-        classname = m.__class__.__name__
-        # for every Linear layer in a model..
-        if('Linear' in classname):
-            # get the number of the inputs
-            n = m.in_features
-            y = 1.0/np.sqrt(n)
-            m.weight.data.uniform_(-y, y)
-            m.bias.data.fill_(0)
+    def weights_init(m):
+        if isinstance(m, nn.GRU):
+            for param in m.parameters():
+                if len(param.shape) >= 2:
+                    init.orthogonal_(param.data)
+                else:
+                    init.normal_(param.data)
+        elif isinstance(m, nn.Linear):
+            init.xavier_normal_(m.weight.data)
+            init.normal_(m.bias.data)
 
     def set_train_for_epoch_func(self, func):
         '''
