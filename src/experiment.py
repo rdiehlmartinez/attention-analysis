@@ -168,6 +168,7 @@ class ClassificationExperiment(Experiment):
             inputs = batch[input_key]
             labels = batch[label_key]
 
+            # NOTE: some kwargs may be specified but not used
             model_args = {}
             if 'attention_mask_key' in kwargs:
                 model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
@@ -199,7 +200,7 @@ class ClassificationExperiment(Experiment):
             losses.append(curr_loss)
         return losses
 
-    def __default_inference_func(self, dataloader, input_key, label_key='', threshold=0.42, **kwargs):
+    def __default_inference_func(self, dataloader, input_key, label_key='', threshold=0.5, **kwargs):
         ''' inference function for a neural network approach to a target task '''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -230,6 +231,7 @@ class ClassificationExperiment(Experiment):
                         model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
                     if 'seq_len_key' in kwargs:
                         model_args["lengths"] = batch[kwargs.get("seq_len_key")]
+
                     predict_logits = self.model(inputs, **model_args)
 
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
@@ -267,7 +269,7 @@ class ClassificationExperiment(Experiment):
                     label_key="label",
                     seq_len_key="pre_lens",
                     attention_mask_key="masks",
-                    threshold=0.42, **kwargs):
+                    threshold=0.5, **kwargs):
 
         '''Trains self.model using parameters from self.params'''
         num_epochs = self.params['training_params']['num_epochs']
@@ -503,7 +505,7 @@ class AttentionExperiment(Experiment):
                                                                                                   k_linear,
                                                                                                   num_attention_heads,
                                                                                                   attention_head_size,
-                                                                                                  mask=mask)
+                                                                                                  mask=mask).cpu()
                                 curr_attention_dict[self_attention_layer] = attention_scores
                             self_attention_layer += 1
                     except AttributeError as e:

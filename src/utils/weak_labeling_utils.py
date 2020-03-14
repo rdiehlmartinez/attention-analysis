@@ -29,7 +29,7 @@ def get_marta_featurizer(dataset_params):
     tok2id = get_tok2id(dataset_params)
     return Featurizer(tok2id, params=dataset_params)
 
-def extract_marta_features(dataset, featurizer):
+def extract_marta_features(dataset, featurizer, bias_key="pre_tok_label_ids"):
     '''
     Extract Marta's set of linguistic features from a particular dataset.
 
@@ -47,14 +47,13 @@ def extract_marta_features(dataset, featurizer):
     from tqdm import tqdm_notebook as tqdm
 
     full_features = []
-    count = 0
     for entry in tqdm(dataset):
         features = featurizer.features(entry["pre_ids"].tolist(),
                                        entry["rel_ids"].tolist(),
                                        entry["pos_ids"].tolist())
 
         # Figuring out what the index is of the first biased word
-        bias_idx = entry['pre_tok_label_ids'].to(dtype=torch.int).flatten().tolist().index(1)
+        bias_idx = entry[bias_key].to(dtype=torch.int).flatten().tolist().index(1)
 
         full_features.append(features[bias_idx, :])
     # num_entries, dim

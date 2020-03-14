@@ -33,7 +33,7 @@ class ShallowClassifier(nn.Module):
         self.f2 = nn.Linear(self.hidden_dim, self.output_dim)
         self.relu = nn.ReLU()
 
-    def forward(self, X):
+    def forward(self, X, **kwargs):
         hidden = self.relu(self.f1(X))
         output = self.f2(hidden)
         return output
