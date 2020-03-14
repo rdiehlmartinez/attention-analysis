@@ -45,6 +45,7 @@ import lib.tagging.model as tagging_model
 import lib.seq2seq.model as seq2seq_model
 import lib.joint.model as complete_model
 from  .utils.data_utils import get_tok2id
+from .utils.shared_utils import load_bias_detection_module
 
 class Hook():
     '''
@@ -394,28 +395,6 @@ class AttentionExperiment(Experiment):
         super().__init__(params, bert_model)
         self._run_inference = inference_func
 
-    def run_inference(self, dataloader):
-        '''
-        Runs inference over a dataset. By default runs inference over the
-        dataset that is loaded in by the dataloader. Can be overwritten by
-        specifying a new dataloader and passing this in for the data optional
-        argument.
-
-        Args:
-            * dataloader (pytorch dataloader): dataloader for a particular dataset where each
-            batch must be processed by self._run_inference
-
-        Returns:
-            * results (List): A list of prediction probabilities
-        '''
-
-        results = []
-        with torch.no_grad():
-            for _, batch in tqdm(enumerate(dataloader)):
-                prediction_probs = self._run_inference(batch)
-                results.append(prediction_probs)
-        return results
-
     @staticmethod
     def transpose_for_scores(x, num_attention_heads, attention_head_size):
         '''
@@ -536,43 +515,9 @@ class AttentionExperiment(Experiment):
             * dataset_params (dict): Dictionary of parameters for the dataset
                 that will be used to extract attention scores from.
         '''
-        general_model_params = intermediary_task_params['general_model_params']
 
-        # Use the dataset parameters to load in the tokenizer
-        tok2id = get_tok2id(dataset_params)
-        tok2id['<del>'] = len(tok2id)
-
-        if verbose:
-            print("The len of our vocabulary is {}".format(len(tok2id)))
-            print("Cuda is set to {}".format('true' if CUDA else 'false'))
-
-        ######################## Specifying Model #####################
-
-        tag_model = tagging_model.BertForMultitaskWithFeaturesOnTop.from_pretrained(
-                    general_model_params['bert_model'],
-                    params=general_model_params,
-                    cls_num_labels=dataset_params['num_categories'],
-                    tok_num_labels=dataset_params['num_tok_labels'],
-                    cache_dir=general_model_params['working_dir'] + '/cache',
-                    tok2id=tok2id)
-
-        if CUDA:
-            tag_model = tag_model.eval().cuda()
-
-        debias_model = seq2seq_model.PointerSeq2Seq(
-            params=general_model_params,
-            vocab_size=len(tok2id),
-            hidden_size=general_model_params['hidden_size'],
-            emb_dim=general_model_params['emb_dim'],
-            dropout=general_model_params['dropout'],
-            tok2id=tok2id)
-
-        if CUDA:
-            debias_model = debias_model.eval().cuda()
-
-        joint_model = complete_model.JointModel(params=general_model_params,
-                                                debias_model=debias_model,
-                                                tagging_model=tag_model)
+        joint_model = load_bias_detection_module(intermediary_task_params, dataset_params)
+        tag_model = joint_model.tagging_model
 
         if from_pretrained:
             if 'model_path' in intermediary_task_params and intermediary_task_params['model_path']:
