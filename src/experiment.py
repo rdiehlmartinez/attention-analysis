@@ -45,7 +45,7 @@ import lib.tagging.model as tagging_model
 import lib.seq2seq.model as seq2seq_model
 import lib.joint.model as complete_model
 from  .utils.data_utils import get_tok2id
-from .utils.shared_utils import load_bias_detection_module
+from .utils.shared_utils import load_bias_detection_module, run_bias_detection_inference
 
 class Hook():
     '''
@@ -449,8 +449,8 @@ class AttentionExperiment(Experiment):
         assert(self.params is not None), "No params have been specified"
         assert(self.model is not None), "No model specified on which to run inference"
 
-
-        self._hooks = [Hook(layer[1]) for layer in list(self.model.named_modules())]
+        # NOTE: the model stored is the joint model
+        self._hooks = [Hook(layer[1]) for layer in list(self.model.tagging_model.named_modules())]
 
         target_layers = self.params['layers']
         num_attention_heads = self.params['num_attention_heads']
@@ -459,7 +459,6 @@ class AttentionExperiment(Experiment):
         attention_scores_list = []
 
         # TODO: Change requirement of batch size of 1 for attention extraction;
-        #       to do this need to think about different tensor dimensionality issue
 
         with torch.no_grad():
             for step, batch in tqdm(enumerate(dataloader)):
@@ -468,7 +467,7 @@ class AttentionExperiment(Experiment):
 
                 mask = batch['masks']
 
-                _ = self._run_inference(batch)
+                _, _ = self._run_inference(self.model, batch)
                 self_attention_layer = 0
 
                 curr_attention_dict = {}
@@ -505,7 +504,7 @@ class AttentionExperiment(Experiment):
         filled out with the learned weights as well as a dataloader which creates
         batches of test data from which attention scores can be derived. The
         user also has to provide a function which given a batch can generate
-        token input that can be read in by the extarct_attention_scores method
+        token input that can be read in by the extract_attention_scores method
         of the Experiment class.
 
         Args:
@@ -533,22 +532,9 @@ class AttentionExperiment(Experiment):
         if CUDA:
             joint_model.eval()
 
-        def run_inference(batch):
-            '''
-            Returns the bias classification probabilities for each token and the
-            mask that is used for the classification.
-            '''
-            is_bias_probs, _ = joint_model.run_tagger(
-                batch['pre_ids'], batch['masks'],
-                rel_ids=batch['rel_ids'],
-                pos_ids=batch['pos_ids'],
-                categories=batch['categories'])
-
-            return is_bias_probs
-
         experiment = AttentionExperiment(params=intermediary_task_params['attention'],
                                          bert_model=tag_model,
-                                         inference_func=run_inference)
+                                         inference_func=run_bias_detection_inference)
 
         if verbose:
             print("Succesfully loaded in attention experiment!")
