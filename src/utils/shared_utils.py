@@ -83,7 +83,7 @@ def run_bias_detection_inference(joint_model, batch):
          categories=batch['categories'])
     return(cls_logits, tok_logits)
 
-def get_bias_predictions(dataset, intermediary_task_params, dataset_params, **kwargs):
+def get_bias_predictions(dataset, intermediary_task_params, dataset_params, batch_size=1):
     '''
     Returns the predicted biased word from a dataset using the tagger which
     has been pre-trained on bias detection.
@@ -107,7 +107,7 @@ def get_bias_predictions(dataset, intermediary_task_params, dataset_params, **kw
 
     predictions_label_ids = []
 
-    for entry in dataset.return_dataloader(**kwargs):
+    for entry in dataset.return_dataloader(batch_size=batch_size):
         cls_logits, tok_logits = run_bias_detection_inference(joint_model, entry)
         arg_max_cls = cls_logits.squeeze().argmax(1).cpu()
 
@@ -116,7 +116,6 @@ def get_bias_predictions(dataset, intermediary_task_params, dataset_params, **kw
         correct_bias_idx = predicted_pre_tok_label_ids.to(dtype=torch.int).flatten().tolist().index(1)
         predicted_pre_tok_label_ids[:, correct_bias_idx] = 0
         predicted_pre_tok_label_ids[:, arg_max_cls] = 1
-        print(predicted_pre_tok_label_ids.shape)
         predictions_label_ids.append(predicted_pre_tok_label_ids)
 
     return torch.cat(predictions_label_ids, dim=0)

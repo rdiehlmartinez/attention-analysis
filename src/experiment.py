@@ -164,7 +164,7 @@ class ClassificationExperiment(Experiment):
         for step, batch in enumerate(dataloader):
             if CUDA:
                 self.model.cuda()
-                batch = {key: val.cuda() for key, val in batch.items()}
+                batch = {key: val.float().cuda() for key, val in batch.items()}
 
             inputs = batch[input_key]
             labels = batch[label_key]
@@ -216,7 +216,7 @@ class ClassificationExperiment(Experiment):
         for step, batch in enumerate(dataloader):
             if CUDA:
                 self.model.cuda()
-                batch = {key: val.cuda() for key, val in batch.items()}
+                batch = {key: val.float().cuda() for key, val in batch.items()}
 
             inputs = batch[input_key]
 
@@ -516,7 +516,6 @@ class AttentionExperiment(Experiment):
         '''
 
         joint_model = load_bias_detection_module(intermediary_task_params, dataset_params)
-        tag_model = joint_model.tagging_model
 
         if from_pretrained:
             if 'model_path' in intermediary_task_params and intermediary_task_params['model_path']:
@@ -533,7 +532,7 @@ class AttentionExperiment(Experiment):
             joint_model.eval()
 
         experiment = AttentionExperiment(params=intermediary_task_params['attention'],
-                                         bert_model=tag_model,
+                                         bert_model=joint_model,
                                          inference_func=run_bias_detection_inference)
 
         if verbose:
