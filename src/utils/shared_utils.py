@@ -112,10 +112,12 @@ def get_bias_predictions(dataset, intermediary_task_params, dataset_params, batc
         arg_max_cls = cls_logits.squeeze().argmax(1).cpu()
 
         #return
-        predicted_pre_tok_label_ids = entry['pre_tok_label_ids']
-        correct_bias_idx = predicted_pre_tok_label_ids.to(dtype=torch.int).flatten().tolist().index(1)
-        predicted_pre_tok_label_ids[:, correct_bias_idx] = 0
-        predicted_pre_tok_label_ids[:, arg_max_cls] = 1
+        predicted_pre_tok_label_ids = entry['pre_tok_label_ids'] * (entry['pre_tok_label_ids'] != 1).float()
+        #correct_bias_idx = (predicted_pre_tok_label_ids == 1).argmax(1)
+
+        #predicted_pre_tok_label_ids[torch.arange(predicted_pre_tok_label_ids.shape[0]), correct_bias_idx] = 0
+        predicted_pre_tok_label_ids[torch.arange(predicted_pre_tok_label_ids.shape[0]), arg_max_cls] = 1
+
         predictions_label_ids.append(predicted_pre_tok_label_ids)
 
     return torch.cat(predictions_label_ids, dim=0)
