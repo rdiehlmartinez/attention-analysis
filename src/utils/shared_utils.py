@@ -98,6 +98,7 @@ def get_bias_predictions(dataset, intermediary_task_params, dataset_params, batc
         * dataset_params (dict): Dictionary of parameters for the dataset
             that will be used to extract attention scores from.
     '''
+    from tqdm import tqdm_notebook as tqdm
 
     joint_model = load_bias_detection_module(intermediary_task_params, dataset_params)
 
@@ -107,15 +108,10 @@ def get_bias_predictions(dataset, intermediary_task_params, dataset_params, batc
 
     predictions_label_ids = []
 
-    for entry in dataset.return_dataloader(batch_size=batch_size):
+    for entry in tqdm(dataset.return_dataloader(batch_size=batch_size)):
         cls_logits, tok_logits = run_bias_detection_inference(joint_model, entry)
-        arg_max_cls = cls_logits.squeeze().argmax(1).cpu()
-
-        #return
+        arg_max_cls = cls_logits.argmax(1).cpu()
         predicted_pre_tok_label_ids = entry['pre_tok_label_ids'] * (entry['pre_tok_label_ids'] != 1).float()
-        #correct_bias_idx = (predicted_pre_tok_label_ids == 1).argmax(1)
-
-        #predicted_pre_tok_label_ids[torch.arange(predicted_pre_tok_label_ids.shape[0]), correct_bias_idx] = 0
         predicted_pre_tok_label_ids[torch.arange(predicted_pre_tok_label_ids.shape[0]), arg_max_cls] = 1
 
         predictions_label_ids.append(predicted_pre_tok_label_ids)
