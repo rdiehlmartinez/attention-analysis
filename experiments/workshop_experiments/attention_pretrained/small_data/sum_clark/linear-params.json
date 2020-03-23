@@ -53,13 +53,13 @@
       "num_attention_heads":1,
       "attention_head_size":768,
       "attention_extraction_batch_size":1,
-      "reducer":"avg"
+      "reducer":"sum"
     }
   },
   "final_task":{
     "model":"shallow_nn",
     "input_dim":80,
-    "hidden_dim":10,
+    "hidden_dim":15,
     "output_dim":1,
     "data_split":{
       "train_split":0.8,
@@ -69,7 +69,7 @@
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
-      "num_epochs":150,
+      "num_epochs":120,
       "batch_size":32,
       "lr":1e-3
     }

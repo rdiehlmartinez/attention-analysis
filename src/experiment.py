@@ -250,6 +250,7 @@ class ClassificationExperiment(Experiment):
                         try:
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
+                            print('in here')
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
@@ -270,7 +271,7 @@ class ClassificationExperiment(Experiment):
                     label_key="label",
                     seq_len_key="pre_lens",
                     attention_mask_key="masks",
-                    threshold=0.5, **kwargs):
+                    threshold=0.42, **kwargs):
 
         '''Trains self.model using parameters from self.params'''
         num_epochs = self.params['training_params']['num_epochs']

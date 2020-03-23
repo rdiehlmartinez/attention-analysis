@@ -53,25 +53,27 @@
       "num_attention_heads":1,
       "attention_head_size":768,
       "attention_extraction_batch_size":1,
-      "reducer":"avg"
+      "reducer":"concat"
     }
   },
   "final_task":{
-    "model":"shallow_nn",
-    "input_dim":80,
-    "hidden_dim":10,
+    "model":"gru",
+    "input_dim":240, 
+    "hidden_dim":40,
     "output_dim":1,
+    "n_layers":2,
+    "dropout":0.1,
     "data_split":{
-      "train_split":0.8,
-      "eval_split": 0.2,
-      "test_split": 0
+      "train_split":0.7,
+      "eval_split":0.3,
+      "test_split":0
     },
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
       "num_epochs":150,
       "batch_size":32,
-      "lr":1e-3
+      "lr":2e-3
     }
   }
 }
