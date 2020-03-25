@@ -476,14 +476,6 @@ class AttentionExperiment(Experiment):
 
                 curr_attention_dict = {}
 
-                '''
-                for i, hook in enumerate(self._hooks):
-                    try:
-                        print(hook.name)
-                    except:
-                        pass
-                '''
-
                 for i, hook in enumerate(self._hooks):
                     try:
                         if hook.name == 'BertSelfAttention':
@@ -498,7 +490,7 @@ class AttentionExperiment(Experiment):
                                                                                                   attention_hidden_size,
                                                                                                   mask=mask).cpu()
                                 # adding all of the attentions together;
-                                attention_probs = torch.sum(attention_probs, dim=1, keepdim=True)
+                                attention_probs = torch.sum(attention_probs, dim=1, keepdim=True)/num_attention_heads
 
                                 curr_attention_dict[self_attention_layer] = attention_probs
                             self_attention_layer += 1

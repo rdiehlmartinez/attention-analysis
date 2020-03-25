@@ -113,7 +113,7 @@ def run_bootstrapping(classification_experiment,
     for _ in tqdm(range(num_bootstrap_iters), desc='Cross Validation Iteration'):
         if shuffle_data:
             dataset.shuffle_data()
-            
+
         data_split = final_task_params['data_split']
         batch_size = final_task_params['training_params']['batch_size']
         loaders = dataset.split_train_eval_test(**data_split, batch_size=batch_size)
@@ -136,16 +136,23 @@ def run_bootstrapping(classification_experiment,
                                                   threshold=threshold,
                                                   **kwargs)
 
-        _, evaluations = classification_experiment.train_model(train_dataloader,
+        losses, evaluations = classification_experiment.train_model(train_dataloader,
                                                                eval_dataloader,
                                                                input_key=input_key,
                                                                label_key=label_key,
                                                                threshold=threshold,
                                                                **kwargs)
+
         avg_evaluations = [average_data(epoch_evaluations) for epoch_evaluations in evaluations]
         for statistic in statistics:
             _, max_statistic, _ = get_statistics(avg_evaluations, statistic)
             stats_list[statistic].append(max_statistic)
+
+        if overfit_test:
+            if num_bootstrap_iters > 1:
+                print("For debugging purposes only running 1 bootstrap iter.")
+            print(losses)
+            break 
 
     return_stats = {}
     for stat, values in stats_list.items():

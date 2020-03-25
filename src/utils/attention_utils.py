@@ -95,6 +95,34 @@ def return_idx_attention_dist(data, indices):
         curr_dict = {}
         for (layer_index, tensor) in sample_dict.items():
             curr_dict[layer_index] = tensor[:, 0, curr_idx, :]
-            # NOTE: attention scores for i^th token are [:,0,i,:] - first dim is thte batch size 
+            # NOTE: attention scores for i^th token are [:,0,i,:] - first dim is thte batch size
         return_list.append(curr_dict)
     return return_list
+
+
+def window_attention_dist(data, indices, window_size=4):
+    '''
+    Given a data tensor of reduced attentions, windows the attentions around
+    the list of indices passed in.
+
+    ARGS:
+        * data: a tensor of attentions, of shape (num_samples, attention_dim)
+        * indices: a list of indices around which to window the attention distributions.
+
+    Returns:
+        * windowed_data (same type as data)
+    '''
+    num_samples = data.shape[0]
+    additional_padding = torch.zeros((num_samples, window_size))
+    expanded_data = torch.cat((additional_padding, data, additional_padding), dim=1)
+
+    indices = torch.tensor(indices) + window_size
+
+    windowed_data = []
+    for i, idx in enumerate(indices):
+        curr_data = expanded_data[i, idx-window_size:idx+window_size+1]
+        windowed_data.append(curr_data)
+
+
+    windowed_data = torch.stack(windowed_data)
+    return windowed_data
