@@ -44,7 +44,7 @@ from torch.optim import Adam, SGD
 import lib.tagging.model as tagging_model
 import lib.seq2seq.model as seq2seq_model
 import lib.joint.model as complete_model
-from  .utils.data_utils import get_tok2id
+from .utils.data_utils import get_tok2id
 from .utils.shared_utils import load_bias_detection_module, run_bias_detection_inference
 
 class Hook():
@@ -250,7 +250,6 @@ class ClassificationExperiment(Experiment):
                         try:
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
-                            print('in here')
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
@@ -397,17 +396,17 @@ class AttentionExperiment(Experiment):
         self._run_inference = inference_func
 
     @staticmethod
-    def transpose_for_scores(x, num_attention_heads, attention_head_size):
+    def transpose_for_scores(x, num_attention_heads, attention_hidden_size):
         '''
         Helper function to transpose the shape of an attention tensor.
         '''
-        new_x_shape = x.size()[:-1] + (num_attention_heads, attention_head_size)
+        new_x_shape = x.size()[:-1] + (num_attention_heads, attention_hidden_size)
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
     @staticmethod
     def calculate_attention_scores(q_layer, k_layer, num_attention_heads,
-                                   attention_head_size, mask=None):
+                                   attention_hidden_size, mask=None):
         '''
         Given a set of query, andf matrices, calculates the output
         attention scores.
@@ -415,18 +414,20 @@ class AttentionExperiment(Experiment):
 
         query_layer = AttentionExperiment.transpose_for_scores(q_layer,
                                                       num_attention_heads,
-                                                      attention_head_size)
+                                                      attention_hidden_size)
         key_layer = AttentionExperiment.transpose_for_scores(k_layer,
                                                     num_attention_heads,
-                                                    attention_head_size)
+                                                    attention_hidden_size)
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-        attention_scores = attention_scores / math.sqrt(attention_head_size)
-        # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
+        attention_scores = attention_scores / math.sqrt(attention_hidden_size)
+
         if mask is not None:
-            mask = mask.to(dtype=torch.float)
-            attention_scores = attention_scores + mask
+            # Mask is 0 for positions we want to attend for and 1 otherwise
+            mask = mask.to(dtype=torch.float).view(mask.shape[0], 1, 1, -1)
+            extended_mask = mask * -10000.0
+            attention_scores = attention_scores + extended_mask
 
         # Normalize the attention scores to probabilities.
         attention_probs = torch.nn.Softmax(dim=-1)(attention_scores)
@@ -455,11 +456,13 @@ class AttentionExperiment(Experiment):
 
         target_layers = self.params['layers']
         num_attention_heads = self.params['num_attention_heads']
-        attention_head_size = self.params['attention_head_size']
+
+        # NOTE: attention head size refers to the total size of the heads;
+        # but each individual head has hidden dim of the head size divided by
+        # the num_attention_heads
+        attention_hidden_size = int(self.params['attention_head_size']/num_attention_heads)
 
         attention_scores_list = []
-
-        # TODO: Change requirement of batch size of 1 for attention extraction;
 
         with torch.no_grad():
             for step, batch in tqdm(enumerate(dataloader)):
@@ -472,24 +475,35 @@ class AttentionExperiment(Experiment):
                 self_attention_layer = 0
 
                 curr_attention_dict = {}
+
+                '''
+                for i, hook in enumerate(self._hooks):
+                    try:
+                        print(hook.name)
+                    except:
+                        pass
+                '''
+
                 for i, hook in enumerate(self._hooks):
                     try:
                         if hook.name == 'BertSelfAttention':
                             if self_attention_layer in target_layers:
-
+                                # Q and K layers
                                 q_linear = self._hooks[i+1].output
                                 k_linear = self._hooks[i+2].output
 
-                                attention_scores = AttentionExperiment.calculate_attention_scores(q_linear,
+                                attention_probs = AttentionExperiment.calculate_attention_scores(q_linear,
                                                                                                   k_linear,
                                                                                                   num_attention_heads,
-                                                                                                  attention_head_size,
+                                                                                                  attention_hidden_size,
                                                                                                   mask=mask).cpu()
-                                curr_attention_dict[self_attention_layer] = attention_scores
+                                # adding all of the attentions together;
+                                attention_probs = torch.sum(attention_probs, dim=1, keepdim=True)
+
+                                curr_attention_dict[self_attention_layer] = attention_probs
                             self_attention_layer += 1
                     except AttributeError as e:
                         continue
-
                 attention_scores_list.append(curr_attention_dict)
 
         return attention_scores_list
