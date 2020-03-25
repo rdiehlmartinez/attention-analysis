@@ -89,6 +89,8 @@ def run_bootstrapping(classification_experiment,
                       threshold=0.42,
                       statistics=["auc", "accuracy"],
                       num_bootstrap_iters=5,
+                      overfit_test=False,
+                      shuffle_data=False,
                       **kwargs):
     '''
     Randomly shuffles dataset and reports statistics along with
@@ -109,12 +111,17 @@ def run_bootstrapping(classification_experiment,
     stats_list = {statistic: [] for statistic in statistics}
 
     for _ in tqdm(range(num_bootstrap_iters), desc='Cross Validation Iteration'):
-        dataset.shuffle_data()
+        if shuffle_data:
+            dataset.shuffle_data()
+            
         data_split = final_task_params['data_split']
         batch_size = final_task_params['training_params']['batch_size']
         loaders = dataset.split_train_eval_test(**data_split, batch_size=batch_size)
 
         train_dataloader, eval_dataloader, _ = loaders
+        if overfit_test:
+            eval_dataloader = train_dataloader
+
         if final_task_params["model"] == "log_reg":
             classification_experiment.model = SGDClassifier(loss='log')
         else:
