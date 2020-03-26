@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ShallowClassifier(nn.Module):
-    def __init__(self, final_task_params, output_dim=1, dropout_prob=0.15):
+    def __init__(self, final_task_params, output_dim=1, dropout_prob=0):
         '''
         A basic feed forward model that takes in a low-dimensional input and
         outputs a prediction for the type of bias. We always assume that the
