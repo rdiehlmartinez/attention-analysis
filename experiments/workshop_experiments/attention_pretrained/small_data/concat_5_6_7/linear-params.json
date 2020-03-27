@@ -49,18 +49,18 @@
       "max_seq_len":80
     },
     "attention":{
-      "layers":[8,9,10,11],
+      "layers":[5,6,7],
       "num_attention_heads":12,
       "attention_head_size":768,
       "attention_extraction_batch_size":8,
-      "reducer":"avg"
+      "reducer":"concat"
     }
   },
   "final_task":{
     "model":"shallow_nn",
     "dropout_prob":0,
-    "input_dim":80,
-    "hidden_dim":10,
+    "input_dim":240,
+    "hidden_dim":15,
     "output_dim":1,
     "data_split":{
       "train_split":0.8,
@@ -72,7 +72,7 @@
       "loss":"bce_with_logits",
       "num_epochs":120,
       "batch_size":32,
-      "lr":1e-3
+      "lr":5e-4
     }
   }
 }

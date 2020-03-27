@@ -97,6 +97,8 @@ def return_idx_attention_dist(data, indices):
     Args:
         * data ([{layer index: torch tensor}]): list of dictionaries
             storing the attention distribution for each sample.
+        * indices (List): A list of indices - usually the index of the presumed
+            biased word.
 
     Returns:
         * return (same as data)
@@ -107,7 +109,43 @@ def return_idx_attention_dist(data, indices):
         curr_idx = indices[i]
         curr_dict = {}
         for (layer_index, tensor) in sample_dict.items():
-            curr_dict[layer_index] = tensor[0, 0, curr_idx, :]
-            # NOTE: attention scores for i^th token are [0,0,i,:]
+            curr_dict[layer_index] = tensor[:, 0, curr_idx, :]
+            # NOTE: attention scores for i^th token are [:,0,i,:] - first dim is thte batch size
         return_list.append(curr_dict)
     return return_list
+
+
+def window_attention_dist(data, indices, window_size=4, num_concat=1):
+    '''
+    Given a data tensor of reduced attentions, windows the attentions around
+    the list of indices passed in.
+
+    ARGS:
+        * data: a tensor of attentions, of shape (num_samples, attention_dim)
+        * indices: a list of indices around which to window the attention distributions.
+
+    Returns:
+        * windowed_data (same type as data)
+    '''
+    num_samples = data.shape[0]
+    num_attention = data.shape[1]/num_concat
+    additional_padding = torch.zeros((num_samples, window_size))
+    indices = torch.tensor(indices) + window_size
+
+    total_windowed_data = []
+    for concat_idx in range(num_concat):
+        start_idx = int(concat_idx * num_attention)
+        end_idx = int(start_idx + num_attention)
+
+        expanded_data = torch.cat((additional_padding, data[:,start_idx:end_idx], additional_padding), dim=1)
+
+        layer_windowed_data = []
+        for i, idx in enumerate(indices):
+            curr_data = expanded_data[i, idx-window_size:idx+window_size+1]
+            layer_windowed_data.append(curr_data)
+        layer_windowed_data = torch.stack(layer_windowed_data)
+        total_windowed_data.append(layer_windowed_data)
+
+    total_windowed_data = torch.cat(total_windowed_data, dim=1)
+
+    return total_windowed_data
