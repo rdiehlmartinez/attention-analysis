@@ -68,9 +68,22 @@ def avg_attention_dist(data):
     return avg_list
 
 def reduce_attention_dist(data, attn_params):
+    '''
+    Given a data tensor applies a reduction to the data and concatenates the
+    tensor into one tensor of shape (n_params, classifier_input_dims).
+    Args:
+        * data ([{layer index: torch tensor}]): list of dictionaries
+            storing the attention distribution for each sample.
+        * attn_params (dict): A dictionary of attention parameters.
+
+    Returns:
+        * reduced_attention (torch.tensor)
+    '''
+    assert(isinstance(attn_params, dict)), "Woops reduce attention now uses attention params instead of a reducer."
+
     reducer = attn_params["reducer"]
     n_components = attn_params.get("n_components", None)
-    
+
     if reducer == "sum":
         reduced_attention = sum_attention_dist(data)
     elif reducer == "avg":
@@ -79,12 +92,13 @@ def reduce_attention_dist(data, attn_params):
         reduced_attention = concat_attention_dist(data)
     else:
         raise ValueError("Bad parameter: \'reducer\' parameter not in {sum, avg, concat}.")
-        
-    reduced_attention = torch.stack(reduced_attention).squeeze()
-        
-    pca = PCA(n_components=n_components, random_state=0)
-    reduced_attention = torch.from_numpy(np.array([pca.fit_transform(sample) for sample in reduced_attention]))
-    
+
+    reduced_attention = torch.cat(reduced_attention)
+
+    if n_components is not None:
+        pca = PCA(n_components=n_components, random_state=0)
+        reduced_attention = torch.from_numpy(np.array([pca.fit_transform(sample) for sample in reduced_attention]))
+
     return reduced_attention
 
 def return_idx_attention_dist(data, indices):
