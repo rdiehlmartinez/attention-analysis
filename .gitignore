@@ -2,6 +2,7 @@
 *.pkl
 *.ckpt
 archive/
+archived/
 data/
 final_model/
 model_weights/
