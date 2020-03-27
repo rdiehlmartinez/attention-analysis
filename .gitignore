@@ -4,6 +4,7 @@
 archive/
 archived/
 data/
+data
 final_model/
 model_weights/
 cache/

@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class GRUClassifier(nn.Module):
-    def __init__(self, final_task_params, output_dim=1, bidirectional=True, attentional=True):
+    def __init__(self, final_task_params, attention_params=None, output_dim=1, bidirectional=True, attentional=True):
         '''
         A basic GRU model that takes in as input attention distributions and
         outputs a prediction for the type of bias. We always assume that the
@@ -30,14 +30,20 @@ class GRUClassifier(nn.Module):
         self.attentional = attentional
 
         # NOTE: we need the input dim to be equal to the max seq len
-        self.input_dim = final_task_params['input_dim']
-        self.embed_dim = final_task_params['input_dim']
+        if attention_params:
+            n_components = attention_params.get('n_components', final_task_params['input_dim'])
+            if attention_params['reducer'] == 'concat':
+                input_dim = n_components * len(attention_params['layers'])
+            else:
+                input_dim = n_components
+        
+        self.input_dim = input_dim
         self.hidden_dim = final_task_params['hidden_dim']
         self.output_dim = output_dim
 
         self.n_layers = final_task_params['n_layers']
         self.dropout = final_task_params['dropout']
-        self.gru = nn.GRU(self.embed_dim, self.hidden_dim,
+        self.gru = nn.GRU(self.input_dim, self.hidden_dim,
                           self.n_layers,
                           batch_first=True,
                           dropout=self.dropout,
@@ -50,10 +56,9 @@ class GRUClassifier(nn.Module):
         if self.attentional:
             units = 512
             self.W1 = nn.Linear(self.n_directions * self.hidden_dim, units)
-            self.W2 = nn.Linear(self.embed_dim, units)
+            self.W2 = nn.Linear(self.input_dim, units)
             self.V = nn.Linear(units, 1)
-
-            context_dim = self.embed_dim
+            context_dim = self.input_dim
 
         self.fc = nn.Linear(context_dim + self.n_directions * self.hidden_dim, self.output_dim)
         self.relu = nn.ReLU()
@@ -85,7 +90,7 @@ class GRUClassifier(nn.Module):
         padded_enc_output, _ = pad_packed_sequence(packed_enc_output, batch_first=True, padding_value=0., total_length=x.shape[1])
 
         if self.attentional:
-            context, attn_weights = self.attention(padded_enc_output, dec_hidden, attention_mask)
+            context, attn_weights = self.attention(padded_enc_output, dec_hidden, attention_mask.long())
             output = self.fc(torch.cat([context, dec_hidden], dim=-1))
         else:
             output = self.fc(dec_hidden)

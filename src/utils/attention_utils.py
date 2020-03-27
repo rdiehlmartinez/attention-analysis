@@ -6,6 +6,9 @@ scores from a trained BERT model.
 """
 
 import torch
+import numpy as np
+
+from sklearn.decomposition import PCA
 
 def concat_attention_dist(data):
     '''
@@ -64,15 +67,25 @@ def avg_attention_dist(data):
     avg_list = [dist/num_attention_layers for dist in sum_list]
     return avg_list
 
-def reduce_attention_dist(data, reducer):
+def reduce_attention_dist(data, attn_params):
+    reducer = attn_params["reducer"]
+    n_components = attn_params.get("n_components", None)
+    
     if reducer == "sum":
-        return sum_attention_dist(data)
+        reduced_attention = sum_attention_dist(data)
     elif reducer == "avg":
-        return avg_attention_dist(data)
+        reduced_attention = avg_attention_dist(data)
     elif reducer == "concat":
-        return concat_attention_dist(data)
+        reduced_attention = concat_attention_dist(data)
     else:
         raise ValueError("Bad parameter: \'reducer\' parameter not in {sum, avg, concat}.")
+        
+    reduced_attention = torch.stack(reduced_attention).squeeze()
+        
+    pca = PCA(n_components=n_components, random_state=0)
+    reduced_attention = torch.from_numpy(np.array([pca.fit_transform(sample) for sample in reduced_attention]))
+    
+    return reduced_attention
 
 def return_idx_attention_dist(data, indices):
     '''
