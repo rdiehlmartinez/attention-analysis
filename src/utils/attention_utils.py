@@ -84,6 +84,8 @@ def return_idx_attention_dist(data, indices):
     Args:
         * data ([{layer index: torch tensor}]): list of dictionaries
             storing the attention distribution for each sample.
+        * indices (List): A list of indices - usually the index of the presumed
+            biased word.
 
     Returns:
         * return (same as data)
@@ -100,7 +102,7 @@ def return_idx_attention_dist(data, indices):
     return return_list
 
 
-def window_attention_dist(data, indices, window_size=4):
+def window_attention_dist(data, indices, window_size=4, num_concat=1):
     '''
     Given a data tensor of reduced attentions, windows the attentions around
     the list of indices passed in.
@@ -113,16 +115,24 @@ def window_attention_dist(data, indices, window_size=4):
         * windowed_data (same type as data)
     '''
     num_samples = data.shape[0]
+    num_attention = data.shape[1]/num_concat
     additional_padding = torch.zeros((num_samples, window_size))
-    expanded_data = torch.cat((additional_padding, data, additional_padding), dim=1)
-
     indices = torch.tensor(indices) + window_size
 
-    windowed_data = []
-    for i, idx in enumerate(indices):
-        curr_data = expanded_data[i, idx-window_size:idx+window_size+1]
-        windowed_data.append(curr_data)
+    total_windowed_data = []
+    for concat_idx in range(num_concat):
+        start_idx = int(concat_idx * num_attention)
+        end_idx = int(start_idx + num_attention)
 
+        expanded_data = torch.cat((additional_padding, data[:,start_idx:end_idx], additional_padding), dim=1)
 
-    windowed_data = torch.stack(windowed_data)
-    return windowed_data
+        layer_windowed_data = []
+        for i, idx in enumerate(indices):
+            curr_data = expanded_data[i, idx-window_size:idx+window_size+1]
+            layer_windowed_data.append(curr_data)
+        layer_windowed_data = torch.stack(layer_windowed_data)
+        total_windowed_data.append(layer_windowed_data)
+
+    total_windowed_data = torch.cat(total_windowed_data, dim=1)
+
+    return total_windowed_data
