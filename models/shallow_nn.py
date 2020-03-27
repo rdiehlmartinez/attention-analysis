@@ -24,7 +24,9 @@ class ShallowClassifier(nn.Module):
             * output_dim (int): Set to 1 since we are doing binary classification.
         '''
         super().__init__()
-        
+
+
+        input_dim = final_task_params['input_dim']
         if attention_params:
             n_components = attention_params.get('n_components', final_task_params['input_dim'])
             if attention_params['reducer'] == 'concat':
