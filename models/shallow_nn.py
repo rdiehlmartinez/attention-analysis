@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ShallowClassifier(nn.Module):
-    def __init__(self, final_task_params, output_dim=1):
+    def __init__(self, final_task_params, attention_params=None, output_dim=1):
         '''
         A basic feed forward model that takes in a low-dimensional input and
         outputs a prediction for the type of bias. We always assume that the
@@ -24,8 +24,15 @@ class ShallowClassifier(nn.Module):
             * output_dim (int): Set to 1 since we are doing binary classification.
         '''
         super().__init__()
+        
+        if attention_params:
+            n_components = attention_params.get('n_components', final_task_params['input_dim'])
+            if attention_params['reducer'] == 'concat':
+                input_dim = n_components * len(attention_params['layers'])
+            else:
+                input_dim = n_components
 
-        self.input_dim = final_task_params['input_dim']
+        self.input_dim = input_dim
         self.hidden_dim = final_task_params['hidden_dim']
         self.output_dim = output_dim
 

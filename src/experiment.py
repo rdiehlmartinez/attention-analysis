@@ -250,7 +250,9 @@ class ClassificationExperiment(Experiment):
                         try:
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
-                            print('in here')
+                            unique_labels = np.unique(labels)
+                            unique_predictions = np.unique(np.argmax(axis=-1))
+                            print(unique_labels, unique_predictions)
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
@@ -299,7 +301,7 @@ class ClassificationExperiment(Experiment):
         return self._inference_func(dataloader=dataloader, **kwargs)
 
     @classmethod
-    def init_cls_experiment(cls, final_task_params):
+    def init_cls_experiment(cls, final_task_params, attention_params=None):
         '''
         Initializes a classification experiment based on parameters that are
         passed in.
@@ -312,10 +314,10 @@ class ClassificationExperiment(Experiment):
             raise Exception("Full attentional model type has been deprecated!")
 
         elif model_type == 'gru':
-            model = GRUClassifier(final_task_params)
+            model = GRUClassifier(final_task_params, attention_params=attention_params)
 
         elif model_type == 'shallow_nn':
-            model = ShallowClassifier(final_task_params)
+            model = ShallowClassifier(final_task_params, attention_params=attention_params)
 
         elif model_type == 'transformer':
             raise NotImplementedError()
