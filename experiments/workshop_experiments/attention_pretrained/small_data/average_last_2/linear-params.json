@@ -70,9 +70,9 @@
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
-      "num_epochs":120,
-      "batch_size":32,
-      "lr":1e-3
+      "num_epochs":1000,
+      "batch_size":64,
+      "lr":5e-4
     }
   }
 }

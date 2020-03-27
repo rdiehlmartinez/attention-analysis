@@ -60,7 +60,7 @@
     "model":"shallow_nn",
     "dropout_prob":0,
     "input_dim":15,
-    "hidden_dim":4,
+    "hidden_dim":3,
     "output_dim":1,
     "data_split":{
       "train_split":0.8,
