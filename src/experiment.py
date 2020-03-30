@@ -220,7 +220,7 @@ class ClassificationExperiment(Experiment):
                 self.model.cuda()
                 batch = {key: val.float().cuda() for key, val in batch.items()}
 
-            inputs = batch[input_key]
+            inputs = batch[input_key].long()
 
             if return_evaluations:
                 labels = batch[label_key].cpu()
