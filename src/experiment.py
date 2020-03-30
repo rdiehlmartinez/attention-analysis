@@ -166,7 +166,7 @@ class ClassificationExperiment(Experiment):
                 self.model.cuda()
                 batch = {key: val.float().cuda() for key, val in batch.items()}
 
-            inputs = batch[input_key]
+            inputs = batch[input_key].long()
             labels = batch[label_key]
 
             # NOTE: some kwargs may be specified but not used
@@ -175,6 +175,7 @@ class ClassificationExperiment(Experiment):
                 model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
             if 'seq_len_key' in kwargs:
                 model_args["lengths"] = batch[kwargs.get("seq_len_key")]
+
             predict_logits = self.model(inputs, **model_args)
 
             if self.params['output_dim'] == 1:
@@ -182,7 +183,6 @@ class ClassificationExperiment(Experiment):
                 labels = torch.reshape(input=labels, shape=predict_logits.shape)
             else:
                 # multi class
-                #TODO
                 raise NotImplementedError("Cannot do classification for multi-class.")
 
             loss = self.loss_fn(predict_logits, labels.to(dtype=torch.float))
@@ -250,9 +250,6 @@ class ClassificationExperiment(Experiment):
                         try:
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
-                            unique_labels = np.unique(labels)
-                            unique_predictions = np.unique(np.argmax(axis=-1))
-                            print(unique_labels, unique_predictions)
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
@@ -283,9 +280,14 @@ class ClassificationExperiment(Experiment):
         for epoch in tqdm(range(num_epochs), desc='epochs', leave=None):
             keys = {"input_key":input_key,
                     "label_key":label_key,
-                    "seq_len_key":seq_len_key,
                     "attention_mask_key":attention_mask_key,
                     "threshold":threshold}
+
+            if self.params['model'] == 'gru':
+                # only the gru model needs a seq_len_key
+                # NOTE: this breaks BERT models if we always pass it in
+                keys = {**keys, "seq_len_key":seq_len_key}
+
             kwargs = {**kwargs, **keys}
 
             losses = self._train_for_epoch(dataloader=train_dataloader, **kwargs)

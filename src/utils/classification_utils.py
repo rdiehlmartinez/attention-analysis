@@ -84,6 +84,7 @@ def run_bootstrapping(classification_experiment,
                       dataset,
                       final_task_params,
                       augmentation_dataset=None,
+                      eval_dataset=None,
                       input_key='input',
                       label_key='label',
                       threshold=0.42,
@@ -107,6 +108,8 @@ def run_bootstrapping(classification_experiment,
         * params (Dictionary): dictionary of params for the classification task.
         * augmentation_dataset (ExperimentDataset): Optional dataset of weak labels
             that we can use to train our model on.
+        * eval_dataeset (ExperimentDataset): Optional dataset on which we
+            can always chose to run evaluation. 
     '''
     stats_list = {statistic: [] for statistic in statistics}
 
@@ -118,9 +121,15 @@ def run_bootstrapping(classification_experiment,
         batch_size = final_task_params['training_params']['batch_size']
         loaders = dataset.split_train_eval_test(**data_split, batch_size=batch_size)
 
-        train_dataloader, eval_dataloader, _ = loaders
+        if eval_dataset is None:
+            train_dataloader, eval_dataloader, _ = loaders
+        else:
+            train_dataloader = dataset.return_dataloader(batch_size=batch_size)
+            eval_dataloader = eval_dataset.return_dataloader(batch_size=batch_size)
+
         if overfit_test:
             eval_dataloader = train_dataloader
+
 
         if final_task_params["model"] == "log_reg":
             classification_experiment.model = SGDClassifier(loss='log')
@@ -152,7 +161,7 @@ def run_bootstrapping(classification_experiment,
             if num_bootstrap_iters > 1:
                 print("For debugging purposes only running 1 bootstrap iter.")
             print(losses)
-            break 
+            break
 
     return_stats = {}
     for stat, values in stats_list.items():
