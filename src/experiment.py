@@ -153,7 +153,8 @@ class ClassificationExperiment(Experiment):
         '''
         self._inference_func = func
 
-    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_loss_every=0, **kwargs):
+    def __default_train_for_epoch(self, dataloader, input_key, label_key,
+                                  print_loss_every=0, **kwargs):
         ''' Abstract training loop for neural network target task training'''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -161,7 +162,8 @@ class ClassificationExperiment(Experiment):
 
         self.model.train()
         losses = []
-        for step, batch in enumerate(dataloader):
+
+        for step, batch in tqdm(enumerate(dataloader), disable=kwargs.get("disable_tqdm", True)):
             if CUDA:
                 self.model.cuda()
                 batch = {key: val.float().cuda() for key, val in batch.items()}
