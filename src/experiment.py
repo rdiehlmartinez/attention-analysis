@@ -38,7 +38,9 @@ from sklearn.linear_model import SGDClassifier
 from models.gru_cls import GRUClassifier
 from models.shallow_nn import ShallowClassifier
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
+from pytorch_pretrained_bert.optimization import BertAdam
 from torch.optim import Adam, SGD
+
 
 # Initializing an attention experiment classesmethod
 import lib.tagging.model as tagging_model
@@ -163,7 +165,7 @@ class ClassificationExperiment(Experiment):
         self.model.train()
         losses = []
 
-        dtype = kwargs.get("model_dtype", "float")
+        dtype = kwargs.get("model_dtype", torch.float)
 
         for step, batch in tqdm(enumerate(dataloader), disable=kwargs.get("disable_tqdm", True)):
             if CUDA:
@@ -174,7 +176,7 @@ class ClassificationExperiment(Experiment):
                 batch = {key: val.type(dtype=dtype).cpu() for key, val in batch.items()}
 
             inputs = batch[input_key]
-            labels = batch[label_key]
+            labels = batch[label_key].float() # labels need to be float for BCE
 
             # NOTE: some kwargs may be specified but not used
             model_args = {}
@@ -220,7 +222,7 @@ class ClassificationExperiment(Experiment):
 
         return_evaluations = label_key != ''
 
-        dtype = kwargs.get("model_dtype", "float")
+        dtype = kwargs.get("model_dtype", torch.float)
 
         for step, batch in enumerate(dataloader):
             if CUDA:
@@ -380,6 +382,9 @@ class ClassificationExperiment(Experiment):
         if optimizer == 'adam':
             optim = Adam(filter(lambda p: p.requires_grad, model.parameters()),
                          lr=final_task_params['training_params']['lr'])
+            if model_type == 'bert_basic_uncased_sequence':
+                optim = BertAdam(filter(lambda p: p.requires_grad, model.parameters()),
+                                 lr=final_task_params['training_params']['lr'])
         elif optimizer == 'sgd':
             optim = SGD(filter(lambda p: p.requires_grad, model.parameters()),
                         lr=final_task_params['training_params']['lr'])
