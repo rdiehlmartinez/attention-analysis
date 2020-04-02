@@ -163,12 +163,17 @@ class ClassificationExperiment(Experiment):
         self.model.train()
         losses = []
 
+        dtype = kwargs.get("model_dtype", "float")
+
         for step, batch in tqdm(enumerate(dataloader), disable=kwargs.get("disable_tqdm", True)):
             if CUDA:
                 self.model.cuda()
-                batch = {key: val.float().cuda() for key, val in batch.items()}
+                batch = {key: val.type(dtype=dtype).cuda() for key, val in batch.items()}
+            else:
+                self.model.cpu()
+                batch = {key: val.type(dtype=dtype).cpu() for key, val in batch.items()}
 
-            inputs = batch[input_key].long()
+            inputs = batch[input_key]
             labels = batch[label_key]
 
             # NOTE: some kwargs may be specified but not used
@@ -187,7 +192,7 @@ class ClassificationExperiment(Experiment):
                 # multi class
                 raise NotImplementedError("Cannot do classification for multi-class.")
 
-            loss = self.loss_fn(predict_logits, labels.to(dtype=torch.float))
+            loss = self.loss_fn(predict_logits, labels)
 
             loss.backward()
 
@@ -215,12 +220,17 @@ class ClassificationExperiment(Experiment):
 
         return_evaluations = label_key != ''
 
+        dtype = kwargs.get("model_dtype", "float")
+
         for step, batch in enumerate(dataloader):
             if CUDA:
                 self.model.cuda()
-                batch = {key: val.float().cuda() for key, val in batch.items()}
+                batch = {key: val.cuda().type(dtype=dtype) for key, val in batch.items()}
+            else:
+                self.model.cpu()
+                batch = {key: val.cpu().type(dtype=dtype) for key, val in batch.items()}
 
-            inputs = batch[input_key].long()
+            inputs = batch[input_key]
 
             if return_evaluations:
                 labels = batch[label_key].cpu()

@@ -195,9 +195,18 @@ class ExperimentDataset(Dataset):
         joined_data = {}
 
         for key in shared_keys:
-            print(key)
-            data_1 = torch.tensor(dataset1.data[key]).long()
-            data_2 = torch.tensor(dataset2.data[key]).long()
+            data_1 = dataset1.data[key]
+            data_2 = dataset2.data[key]
+
+            if isinstance(data_1, np.ndarray):
+                data_1 = torch.tensor(data_1)
+
+            if isinstance(data_2, np.ndarray):
+                data_2 = torch.tensor(data_2)
+
+            data_1 = data_1.float()
+            data_2 = data_2.float()
+
             joined_data[key] = torch.cat((data_1, data_2), dim=0)
 
         return ExperimentDataset(joined_data)
