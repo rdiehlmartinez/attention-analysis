@@ -38,7 +38,9 @@ from sklearn.linear_model import SGDClassifier
 from models.gru_cls import GRUClassifier
 from models.shallow_nn import ShallowClassifier
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
+from pytorch_pretrained_bert.optimization import BertAdam
 from torch.optim import Adam, SGD
+
 
 # Initializing an attention experiment classesmethod
 import lib.tagging.model as tagging_model
@@ -153,7 +155,8 @@ class ClassificationExperiment(Experiment):
         '''
         self._inference_func = func
 
-    def __default_train_for_epoch(self, dataloader, input_key, label_key, print_loss_every=0, **kwargs):
+    def __default_train_for_epoch(self, dataloader, input_key, label_key,
+                                  print_loss_every=0, **kwargs):
         ''' Abstract training loop for neural network target task training'''
 
         assert(self.loss_fn is not None and self.optimizer is not None),\
@@ -161,13 +164,19 @@ class ClassificationExperiment(Experiment):
 
         self.model.train()
         losses = []
-        for step, batch in enumerate(dataloader):
+
+        dtype = kwargs.get("model_dtype", torch.float)
+
+        for step, batch in tqdm(enumerate(dataloader), disable=kwargs.get("disable_tqdm", True)):
             if CUDA:
                 self.model.cuda()
-                batch = {key: val.float().cuda() for key, val in batch.items()}
+                batch = {key: val.type(dtype=dtype).cuda() for key, val in batch.items()}
+            else:
+                self.model.cpu()
+                batch = {key: val.type(dtype=dtype).cpu() for key, val in batch.items()}
 
             inputs = batch[input_key]
-            labels = batch[label_key]
+            labels = batch[label_key].float() # labels need to be float for BCE
 
             # NOTE: some kwargs may be specified but not used
             model_args = {}
@@ -175,6 +184,7 @@ class ClassificationExperiment(Experiment):
                 model_args["attention_mask"] = batch[kwargs.get("attention_mask_key")]
             if 'seq_len_key' in kwargs:
                 model_args["lengths"] = batch[kwargs.get("seq_len_key")]
+
             predict_logits = self.model(inputs, **model_args)
 
             if self.params['output_dim'] == 1:
@@ -182,10 +192,9 @@ class ClassificationExperiment(Experiment):
                 labels = torch.reshape(input=labels, shape=predict_logits.shape)
             else:
                 # multi class
-                #TODO
                 raise NotImplementedError("Cannot do classification for multi-class.")
 
-            loss = self.loss_fn(predict_logits, labels.to(dtype=torch.float))
+            loss = self.loss_fn(predict_logits, labels)
 
             loss.backward()
 
@@ -213,10 +222,15 @@ class ClassificationExperiment(Experiment):
 
         return_evaluations = label_key != ''
 
+        dtype = kwargs.get("model_dtype", torch.float)
+
         for step, batch in enumerate(dataloader):
             if CUDA:
                 self.model.cuda()
-                batch = {key: val.float().cuda() for key, val in batch.items()}
+                batch = {key: val.cuda().type(dtype=dtype) for key, val in batch.items()}
+            else:
+                self.model.cpu()
+                batch = {key: val.cpu().type(dtype=dtype) for key, val in batch.items()}
 
             inputs = batch[input_key]
 
@@ -250,8 +264,6 @@ class ClassificationExperiment(Experiment):
                         try:
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
-                            unique_labels = np.unique(labels)
-                            unique_predictions = np.unique(batch_predictions)
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
@@ -282,9 +294,14 @@ class ClassificationExperiment(Experiment):
         for epoch in tqdm(range(num_epochs), desc='epochs', leave=None):
             keys = {"input_key":input_key,
                     "label_key":label_key,
-                    "seq_len_key":seq_len_key,
                     "attention_mask_key":attention_mask_key,
                     "threshold":threshold}
+
+            if self.params['model'] == 'gru':
+                # only the gru model needs a seq_len_key
+                # NOTE: this breaks BERT models if we always pass it in
+                keys = {**keys, "seq_len_key":seq_len_key}
+
             kwargs = {**kwargs, **keys}
 
             losses = self._train_for_epoch(dataloader=train_dataloader, **kwargs)
@@ -365,6 +382,9 @@ class ClassificationExperiment(Experiment):
         if optimizer == 'adam':
             optim = Adam(filter(lambda p: p.requires_grad, model.parameters()),
                          lr=final_task_params['training_params']['lr'])
+            if model_type == 'bert_basic_uncased_sequence':
+                optim = BertAdam(filter(lambda p: p.requires_grad, model.parameters()),
+                                 lr=final_task_params['training_params']['lr'])
         elif optimizer == 'sgd':
             optim = SGD(filter(lambda p: p.requires_grad, model.parameters()),
                         lr=final_task_params['training_params']['lr'])

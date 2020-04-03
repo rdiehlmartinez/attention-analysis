@@ -174,3 +174,58 @@ class ExperimentDataset(Dataset):
                             tok2id,
                             dataset_params['max_seq_len'])
         return ExperimentDataset(data)
+
+    @classmethod
+    def merge_datasets(cls, dataset1, dataset2):
+        '''
+        Merges together two datasets, only keeping the keys that are present in
+        both dataset1 and dataset2. In effect, this method creates an inner-join
+        of the two dataset and returns a new dataset to the user.
+
+        Args:
+            dataset1 (ExperimentDataset): First dataset to join
+            dataset2 (ExperimentDataset): Second dataset to join
+
+        Returns:
+            joined_dataset (ExperimentDataset): A joined version of the datasets
+        '''
+
+        shared_keys = set(dataset1.data.keys()) & set(dataset2.data.keys())
+
+        joined_data = {}
+
+        for key in shared_keys:
+            data_1 = dataset1.data[key]
+            data_2 = dataset2.data[key]
+
+            if isinstance(data_1, np.ndarray):
+                data_1 = torch.tensor(data_1)
+
+            if isinstance(data_2, np.ndarray):
+                data_2 = torch.tensor(data_2)
+
+            data_1 = data_1.float()
+            data_2 = data_2.float()
+
+            joined_data[key] = torch.cat((data_1, data_2), dim=0)
+
+        return ExperimentDataset(joined_data)
+
+    @classmethod
+    def split_dataset(cls, dataset1, idx):
+        '''
+        Splits all of the data in a given dataset at a particular index, and
+        returns the new segmented data as a new dataset.
+
+        Args:
+            dataset1 (ExperimentDataset): The dataset that we want to split
+            idx (int): The index at which to split our data. If negative this
+                index will split using data[idx:], otherwise it will split
+                using data[:idx].
+        '''
+
+        if idx > 0:
+            split_data = {key: val[:idx] for key, val in dataset1.data.items()}
+        else:
+            split_data = {key: val[idx:] for key, val in dataset1.data.items()}
+        return ExperimentDataset(split_data)

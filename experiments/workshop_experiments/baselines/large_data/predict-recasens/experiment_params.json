@@ -1,6 +1,7 @@
 {
   "dataset":{
-      "labeled_data":"../../../../../data/small_data/bias_labeled.tsv",
+      "weakly_labeled_data":"../../../../../data/large_data/bias_weak_labeled.pkl",
+      "labeled_data":"../../../../../data/small_data/bias_labeled_dev.tsv",
       "lexicon_dir":"../../../../../data/lexicons",
       "num_categories":43,
       "num_tok_labels":3,
@@ -47,33 +48,19 @@
       "emb_dim":768,
       "dropout":0.2,
       "max_seq_len":80
-    },
-    "attention":{
-      "layers":[6,7,8],
-      "num_attention_heads":1,
-      "attention_head_size":768,
-      "attention_extraction_batch_size":1,
-      "reducer":"concat"
     }
   },
   "final_task":{
-    "model":"gru",
-    "input_dim":240, 
-    "hidden_dim":40,
+    "model":"shallow_nn",
+    "input_dim": 90,
+    "hidden_dim":30,
     "output_dim":1,
-    "n_layers":2,
-    "dropout":0.1,
-    "data_split":{
-      "train_split":0.7,
-      "eval_split":0.3,
-      "test_split":0
-    },
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
-      "num_epochs":150,
-      "batch_size":32,
-      "lr":2e-3
+      "num_epochs":5,
+      "batch_size":64,
+      "lr":4e-3
     }
   }
 }
