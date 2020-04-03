@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class GRUClassifier(nn.Module):
-    def __init__(self, final_task_params, attention_params=None, output_dim=1, bidirectional=True, attentional=True):
+    def __init__(self, final_task_params, attention_params=None, output_dim=1, bidirectional=True):
         '''
         A basic GRU model that takes in as input attention distributions and
         outputs a prediction for the type of bias. We always assume that the
@@ -27,7 +27,10 @@ class GRUClassifier(nn.Module):
         '''
         super().__init__()
 
-        self.attentional = attentional
+        self.attentional = final_task_params.get("attention", True)
+        
+        if self.attentional:
+            assert(bool(attention_params)), "\'attention_params\' cannot be None if \'attentional\' is True."
 
         # NOTE: we need the input dim to be equal to the max seq len
         if attention_params:
@@ -54,7 +57,7 @@ class GRUClassifier(nn.Module):
         # attentional layers
         context_dim = 0
         if self.attentional:
-            units = 512
+            units = final_task_params.get("attention_units", 512)
             self.W1 = nn.Linear(self.n_directions * self.hidden_dim, units)
             self.W2 = nn.Linear(self.input_dim, units)
             self.V = nn.Linear(units, 1)
@@ -64,10 +67,9 @@ class GRUClassifier(nn.Module):
         self.relu = nn.ReLU()
 
     def attention(self, enc_output, dec_hidden, attention_mask):
-
         # score: [B, N, 1]
         scores = self.V(torch.tanh(self.W1(dec_hidden.unsqueeze(1)) + self.W2(enc_output)))
-        scores[attention_mask] = float('-inf')
+        scores[attention_mask] = -10000.0
 
         # attn_weights: [B, N, 1]
         attn_weights = torch.softmax(scores, dim=1)

@@ -67,7 +67,7 @@ def avg_attention_dist(data):
     avg_list = [dist/num_attention_layers for dist in sum_list]
     return avg_list
 
-def reduce_attention_dist(data, attn_params):
+def reduce_attention_dist(data, attn_params, lengths):
     '''
     Given a data tensor applies a reduction to the data and concatenates the
     tensor into one tensor of shape (n_params, classifier_input_dims).
@@ -93,10 +93,14 @@ def reduce_attention_dist(data, attn_params):
     else:
         raise ValueError("Bad parameter: \'reducer\' parameter not in {sum, avg, concat}.")
 
-    reduced_attention = torch.cat(reduced_attention)
-
+    reduced_attention = torch.stack(reduced_attention).squeeze()
+    
+    for i, length in enumerate(lengths):
+        reduced_attention[i, length-1:, :] = 0
+        reduced_attention[i, :, length-1:] = 0
+        
     if n_components is not None:
-        pca = PCA(n_components=n_components, random_state=0)
+        pca = PCA(n_components=n_components, random_state=0)        
         reduced_attention = torch.from_numpy(np.array([pca.fit_transform(sample) for sample in reduced_attention]))
 
     return reduced_attention

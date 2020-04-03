@@ -250,7 +250,7 @@ class ClassificationExperiment(Experiment):
                     predict_logits = self.model(inputs, **model_args)
 
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
-
+                    
                     for prob in list(predict_probs):
                         if prob > threshold:
                             predictions.append(1)
