@@ -236,7 +236,7 @@ class ClassificationExperiment(Experiment):
                     predict_logits = self.model(inputs, **model_args)
 
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
-
+                    
                     for prob in list(predict_probs):
                         if prob > threshold:
                             predictions.append(1)
@@ -251,8 +251,7 @@ class ClassificationExperiment(Experiment):
                             auc_score = roc_auc_score(labels, predict_probs)
                         except:
                             unique_labels = np.unique(labels)
-                            unique_predictions = np.unique(np.argmax(axis=-1))
-                            print(unique_labels, unique_predictions)
+                            unique_predictions = np.unique(batch_predictions)
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
 
