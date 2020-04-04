@@ -35,8 +35,8 @@ from src.utils.shared_utils import CUDA
 # Initializing a classification experiment classesmethod
 from .utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
 from sklearn.linear_model import SGDClassifier
-from models.gru_cls import GRUClassifier
-from models.shallow_nn import ShallowClassifier
+from .models.gru_cls import GRUClassifier
+from .models.shallow_nn import ShallowClassifier
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from pytorch_pretrained_bert.optimization import BertAdam
 from torch.optim import Adam, SGD

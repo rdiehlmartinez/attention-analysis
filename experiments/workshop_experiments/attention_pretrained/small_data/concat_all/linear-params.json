@@ -1,7 +1,6 @@
 {
   "dataset":{
-      "weakly_labeled_data":"../../../../../data/large_data/bias_weak_labeled.pkl",
-      "labeled_data":"../../../../../data/small_data/bias_labeled_dev.tsv",
+      "labeled_data":"../../../../../data/small_data/bias_labeled.tsv",
       "lexicon_dir":"../../../../../data/lexicons",
       "num_categories":43,
       "num_tok_labels":3,
@@ -53,14 +52,14 @@
       "layers":[0,1,2,3,4,5,6,7,8,9,10,11],
       "num_attention_heads":12,
       "attention_head_size":768,
-      "attention_extraction_batch_size":64,
+      "attention_extraction_batch_size":8,
       "reducer":"concat"
     }
   },
   "final_task":{
     "model":"shallow_nn",
     "dropout_prob":0,
-    "input_dim":180,
+    "input_dim":960,
     "hidden_dim":15,
     "output_dim":1,
     "data_split":{
@@ -71,7 +70,7 @@
     "training_params":{
       "optimizer":"adam",
       "loss":"bce_with_logits",
-      "num_epochs":20,
+      "num_epochs":1000,
       "batch_size":32,
       "lr":5e-4
     }
