@@ -96,11 +96,13 @@ class ExperimentDataset(Dataset):
         ''' Adds column of data to datset'''
         self.data[key_name] = data
 
-    def shuffle_data(self):
+    def shuffle_data(self, seed=None):
         '''Shuffles the data randomly'''
+        np.random.seed(seed)
         p = np.random.permutation(len(self))
         for key in self.data.keys():
             self.data[key] = self.data[key][p]
+        np.random.seed()
 
     def split_train_eval_test(self, data=None, train_split=0.8, eval_split=0.1, test_split=0.1, batch_size=1):
         '''

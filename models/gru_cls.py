@@ -33,12 +33,12 @@ class GRUClassifier(nn.Module):
             assert(bool(attention_params)), "\'attention_params\' cannot be None if \'attentional\' is True."
 
         # NOTE: we need the input dim to be equal to the max seq len
+        input_dim = final_task_params['input_dim']
         if attention_params:
-            n_components = attention_params.get('n_components', final_task_params['input_dim'])
-            if attention_params['reducer'] == 'concat':
+            if "n_components" in attention_params:
+                input_dim = attention_params["n_components"]
+            elif attention_params['reducer'] == 'concat':
                 input_dim = n_components * len(attention_params['layers'])
-            else:
-                input_dim = n_components
         
         self.input_dim = input_dim
         self.hidden_dim = final_task_params['hidden_dim']
