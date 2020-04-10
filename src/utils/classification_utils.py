@@ -87,6 +87,7 @@ def run_bootstrapping(classification_experiment,
                       num_bootstrap_iters=5,
                       overfit_test=False,
                       shuffle_data=False,
+                      seed=None,
                       **kwargs):
     '''
     Randomly shuffles dataset and reports statistics along with
@@ -108,9 +109,9 @@ def run_bootstrapping(classification_experiment,
     '''
     stats_list = {statistic: [] for statistic in statistics}
 
-    for _ in tqdm(range(num_bootstrap_iters), desc='Cross Validation Iteration'):
+    for i in tqdm(range(num_bootstrap_iters), desc='Cross Validation Iteration'):
         if shuffle_data:
-            dataset.shuffle_data()
+            dataset.shuffle_data(seed + i)
 
         data_split = final_task_params['data_split']
         batch_size = final_task_params['training_params']['batch_size']

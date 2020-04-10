@@ -326,6 +326,51 @@ class ClassificationExperiment(Experiment):
     def run_inference(self, dataloader, **kwargs):
         '''Runs inference on self.model and returns model predictions'''
         return self._inference_func(dataloader=dataloader, **kwargs)
+    
+    def extract_attention_scores(self, dataloader, input_key, **kwargs):
+        '''
+        From the params object, the parameters we need are:
+            - model
+            - attention
+        Returns:
+            * attention_weights
+        '''        
+        if self.params['model'] != 'gru' or not self.params['attention']:
+            raise ValueError("Attention scores can only be extracted from attentional GRU classifiers as of April 10, 2020.")
+
+        self._hook = None
+        for module in self.model.named_modules():
+            if type(module[1]).__name__ == "AttentionLayer":
+                self._hook = Hook(module[1])
+        
+        if self._hook is None:
+            raise ValueError("AttentionLayer module not registered to classifier model.")
+        
+        dtype = kwargs.get("model_dtype", torch.float)
+        
+        with torch.no_grad():
+            attention_weights_list = []
+            for batch in dataloader:
+                self.model.eval()
+                if CUDA:
+                    self.model.cuda()
+                    batch = {key: val.cuda().type(dtype=dtype) for key, val in batch.items()}
+                else:
+                    self.model.cpu()
+                    batch = {key: val.cpu().type(dtype=dtype) for key, val in batch.items()}
+
+                lengths = None
+                attention_mask = None
+                if "seq_len_key" in kwargs:
+                    lengths = batch[kwargs["seq_len_key"]]
+                if "attention_mask_key" in kwargs:
+                    attention_mask = batch[kwargs["attention_mask_key"]]
+                
+                self.model.forward(batch[input_key], lengths=lengths, attention_mask=attention_mask)
+                attention_weights = self._hook.output.cpu()
+                attention_weights_list.append(attention_weights)
+
+        return attention_weights_list
 
     @classmethod
     def init_cls_experiment(cls, final_task_params, attention_params=None):
