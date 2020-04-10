@@ -75,7 +75,7 @@ def reduce_attention_dist(data, attn_params, lengths=None):
         * data ([{layer index: torch tensor}]): list of dictionaries
             storing the attention distribution for each sample.
         * attn_params (dict): A dictionary of attention parameters.
-        * length (list): List of lengths, can be passed in to set all
+        * length (list): List of lengths of distributiosn, can be passed in to set all
             attention to 0 if masked. This should be 0 if returned properly
             from BERT Attention Experiment with correct masks.
 
@@ -96,7 +96,7 @@ def reduce_attention_dist(data, attn_params, lengths=None):
     else:
         raise ValueError("Bad parameter: \'reducer\' parameter not in {sum, avg, concat}.")
 
-    reduced_attention = torch.stack(reduced_attention).squeeze()
+    reduced_attention = torch.cat(reduced_attention, dim=0)
 
     if lengths is not None:
         for i, length in enumerate(lengths):

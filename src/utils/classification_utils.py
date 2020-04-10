@@ -8,21 +8,22 @@ statistics.
 
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
-from sklearn.metrics import roc_auc_score
 from sklearn.linear_model import SGDClassifier
 from tqdm import tqdm_notebook as tqdm
 
+# evaluation metrics
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import precision_score
+
 def logreg_train_for_epoch(self, dataloader, input_key, label_key, **kwargs):
-    ''' A basic training loop for sklearn logistic regression. By default uses SGD.'''
-    accuracies = []
-    label_classes = np.unique(dataloader.dataset.data[label_key])
-    for step, batch in enumerate(dataloader):
-        inputs = batch[input_key]
-        labels = batch[label_key]
-        self.model = self.model.partial_fit(inputs, labels, classes=label_classes)
-        accuracies.append({"num_examples":len(labels),
-                           "accuracy":self.model.score(inputs, labels)})
-    return accuracies
+    '''
+    A basic training loop for sklearn logistic regression. By default uses SGD.
+    We currently do not implement this, but future implementations might want
+    to have this as a feature.
+    '''
+    raise NotImplementedError()
 
 def logreg_binary_inference_func(self, dataloader, input_key, label_key, threshold=0.42, **kwargs):
     ''' For logistic regression binary-class inference'''
@@ -51,10 +52,16 @@ def logreg_binary_inference_func(self, dataloader, input_key, label_key, thresho
         if return_evaluations:
             accuracy = np.sum(np.array(batch_predictions) == np.array(labels))/len(labels)
             auc_score = roc_auc_score(labels, predict_probs[:, 1])
+            precision = precision_score(labels, batch_predictions)
+            recall = recall_score(labels, batch_predictions)
+            f1 = f1_score(labels, batch_predictions)
 
             curr_eval = {"num_examples":len(labels),
                          "accuracy":accuracy,
-                         "auc":auc_score}
+                         "auc":auc_score,
+                         "precision":precision,
+                         "recall":recall,
+                         "f1":f1}
             evaluations.append(curr_eval)
 
     predictions = np.stack(predictions, axis=0)
@@ -66,19 +73,7 @@ def logreg_multi_inference_func(self, dataloader, input_key, label_key, **kwargs
     this code. Left for future implementations where more than 2 types of
     bias are to be classified.
     '''
-
-    predictions = []
-    evaluations = []
-    for step, batch in enumerate(dataloader):
-        inputs = batch[input_key]
-        labels = batch[label_key]
-        predictions.append(self.model.predict_proba(inputs, labels))
-        accuracy = self.model.score(inputs, labels)
-        curr_eval = {"num_examples":len(labels),
-                     "accuracy":accuracy}
-        evaluations.append(curr_eval)
-    predictions = np.stack(predictions, axis=0)
-    return predictions, evaluations
+    raise NotImplementedError()
 
 def run_bootstrapping(classification_experiment,
                       dataset,
@@ -88,7 +83,7 @@ def run_bootstrapping(classification_experiment,
                       input_key='input',
                       label_key='label',
                       threshold=0.42,
-                      statistics=["auc", "accuracy"],
+                      statistics=["auc", "accuracy", "f1", "precision", "recall"],
                       num_bootstrap_iters=5,
                       overfit_test=False,
                       shuffle_data=False,
@@ -110,7 +105,7 @@ def run_bootstrapping(classification_experiment,
         * augmentation_dataset (ExperimentDataset): Optional dataset of weak labels
             that we can use to train our model on.
         * eval_dataeset (ExperimentDataset): Optional dataset on which we
-            can always chose to run evaluation. 
+            can always chose to run evaluation.
     '''
     stats_list = {statistic: [] for statistic in statistics}
 

@@ -29,8 +29,13 @@ import math
 import pickle
 from src.params import Params
 import numpy as np
-from sklearn.metrics import roc_auc_score
 from src.utils.shared_utils import CUDA
+
+# Inference evaluation metrics
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import precision_score
 
 # Initializing a classification experiment classesmethod
 from .utils.classification_utils import logreg_train_for_epoch, logreg_binary_inference_func
@@ -250,7 +255,7 @@ class ClassificationExperiment(Experiment):
                     predict_logits = self.model(inputs, **model_args)
 
                     predict_probs = nn.Sigmoid()(predict_logits).cpu().numpy()
-                    
+
                     for prob in list(predict_probs):
                         if prob > threshold:
                             predictions.append(1)
@@ -266,10 +271,16 @@ class ClassificationExperiment(Experiment):
                         except:
                             # NOTE: All labels in valid set of the same type – skipping AUC calculation
                             continue
+                        precision = precision_score(labels, batch_predictions)
+                        recall = recall_score(labels, batch_predictions)
+                        f1 = f1_score(labels, batch_predictions)
 
                         curr_eval = {"num_examples":len(labels),
                                      "accuracy":accuracy,
-                                     "auc":auc_score}
+                                     "auc":auc_score,
+                                     "precision":precision,
+                                     "recall":recall,
+                                     "f1":f1}
                         evaluations.append(curr_eval)
 
                 else:
