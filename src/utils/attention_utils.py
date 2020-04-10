@@ -67,6 +67,28 @@ def avg_attention_dist(data):
     avg_list = [dist/num_attention_layers for dist in sum_list]
     return avg_list
 
+def avg_attention_dist_accross_tokens(data):
+    '''
+    Given a dataset of attentional distributions averages all of the
+    attention distributions accross each layer. Concretely, our
+    input will have dimensions: (batch_size,attention_heads=1,word_idx,attention_dist).
+    The output tensors will have dimension (batch_size, attention_dist).
+
+    Args:
+        * data ([{layer index: torch tensor}]): list of dictionaries
+            storing the attention distribution for each sample.
+
+    Returns:
+        * return ([{index: torch tensor}])
+    '''
+    return_list = []
+    for i, sample_dict in enumerate(data):
+        curr_dict = {}
+        for (layer_index, tensor) in sample_dict.items():
+            curr_dict[layer_index] = tensor.mean(dim=2).squeeze()
+        return_list.append(curr_dict)
+    return return_list
+
 def reduce_attention_dist(data, attn_params, lengths=None):
     '''
     Given a data tensor applies a reduction to the data and concatenates the
