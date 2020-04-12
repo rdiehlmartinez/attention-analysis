@@ -118,7 +118,7 @@ def reduce_attention_dist(data, attn_params, lengths=None):
     else:
         raise ValueError("Bad parameter: \'reducer\' parameter not in {sum, avg, concat}.")
 
-    reduced_attention = torch.cat(reduced_attention, dim=0)
+    reduced_attention = torch.cat(reduced_attention, dim=0).squeeze()
 
     if lengths is not None:
         for i, length in enumerate(lengths):
