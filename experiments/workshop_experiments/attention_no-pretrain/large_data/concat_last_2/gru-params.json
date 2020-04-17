@@ -50,7 +50,7 @@
       "max_seq_len":80
     },
     "attention":{
-      "layers":[1,2,3,4,5,6,7,8,9,10,11],
+      "layers":[10,11],
       "num_attention_heads":1,
       "attention_head_size":768,
       "attention_extraction_batch_size":64,
